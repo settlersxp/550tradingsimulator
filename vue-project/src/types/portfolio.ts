@@ -4,4 +4,5 @@ export interface Portfolio {
   assets: Asset[]
   upwardThreshold: number
   downwardThreshold: number
+  stopLossThreshold: number
 }

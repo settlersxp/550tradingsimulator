@@ -15,11 +15,15 @@ import type { Position } from './types/position'
 // Portfolio data structure
 import type { Portfolio } from './types/portfolio'
 
+// Import the PositionDisplay component
+import PositionDisplay from './components/PositionDisplay.vue'
+
 // Reactive portfolio state
 const portfolio = reactive<Portfolio>({
   assets: [],
   upwardThreshold: 5,
-  downwardThreshold: 5
+  downwardThreshold: 5,
+  stopLossThreshold: 5 // New stop loss threshold
 })
 
 // Number of assets to generate
@@ -145,6 +149,17 @@ watch(numberOfAssets, (newVal, oldVal) => {
         />
       </div>
       
+      <div class="control-group">
+        <label for="stopLossThreshold">Stop Loss Threshold (%):</label>
+        <input 
+          id="stopLossThreshold" 
+          v-model.number="portfolio.stopLossThreshold" 
+          type="number" 
+          min="0" 
+          step="0.1"
+        />
+      </div>
+      
       <button @click="updatePortfolio">Update Portfolio</button>
     </div>
     
@@ -165,16 +180,11 @@ watch(numberOfAssets, (newVal, oldVal) => {
         <p>Previous Price: ${{ asset.previousPrice.toFixed(2) }}</p>
         <div class="positions">
           <h4>Positions:</h4>
-          <ul>
-            <li 
-              v-for="(position, index) in asset.positions" 
-              :key="index"
-            >
-              Opening Price: ${{ position.openingPrice.toFixed(2) }}
-              <span v-if="position.isActive"> (Active)</span>
-              <span v-else> (Closed)</span>
-            </li>
-          </ul>
+          <PositionDisplay 
+            v-for="(position, index) in asset.positions" 
+            :key="index"
+            :position="position"
+          />
         </div>
       </div>
     </div>
