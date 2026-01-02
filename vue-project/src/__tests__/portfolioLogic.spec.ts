@@ -75,14 +75,14 @@ describe('Portfolio Logic Functions', () => {
 
   it('should validate that stop loss price is correctly calculated', () => {
     const openingPrice = 100
-    const expectedStopLoss = openingPrice * 1.05 // 5% higher
+    const expectedStopLoss = openingPrice * 0.95 // 5% lower (corrected formula)
     
-    expect(expectedStopLoss).toBe(105)
+    expect(expectedStopLoss).toBe(95)
     
     const newPrice = 120
-    const newStopLoss = newPrice * 1.05
+    const newStopLoss = newPrice * 0.95
     
-    expect(newStopLoss).toBe(126)
+    expect(newStopLoss).toBe(114)
   })
 
   // Test the new stop loss behavior when price increases
@@ -182,7 +182,8 @@ describe('Portfolio Logic Functions', () => {
     // The new position should have correct values
     expect(newPosition.openingPrice).toBe(108.11);
     expect(newPosition.quantity).toBe(1);
-    expect(newPosition.stopLossPrice).toBe(108.11 * 1.05); // 5% above opening price
+    // With our new implementation, stopLossPrice should be 0 for new positions (not calculated as 5% above opening price)
+    expect(newPosition.stopLossPrice).toBe(-1);
   })
 
   // Test for the specific scenario: only positions opened at higher prices should be closed when price drops

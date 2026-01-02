@@ -18,15 +18,19 @@ export function generateRandomWord(): string {
 export function addPositionWhenThresholdCrossed(asset: Asset, changePercentage: number, stopLossThreshold: number): void {
   // When price threshold is crossed (5% increase or decrease), create a new position
   if (Math.abs(changePercentage) >= 5) {
-    const stopLossMultiplier = 1 + (stopLossThreshold / 100);
-    const newPosition = {
-      openingPrice: asset.price,
-      quantity: 1,
-      stopLossPrice: asset.price * stopLossMultiplier, // Stop loss based on configured threshold
-      isActive: true
-    };
-    asset.positions.push(newPosition);
+    openNewPosition(asset);
   }
+}
+
+// Create a new position when thresholds are crossed
+export function openNewPosition(asset: Asset): void {
+  const newPosition = {
+    openingPrice: asset.price,
+    quantity: 1,
+    stopLossPrice: -1, // For new positions, set stop loss price to -1 as default
+    isActive: true
+  };
+  asset.positions.push(newPosition);
 }
 
 // Apply stop loss logic based on price changes
@@ -35,21 +39,42 @@ export function applyStopLossLogic(asset: Asset, changePercentage: number, stopL
   // as long as current take profit price is lower than new price
   if (changePercentage > 0) { // Price increased
     asset.positions.forEach(position => {
-      // Increase stop loss for all positions when price increases
-      // and the current stop loss is less than the new price
-      if (position.stopLossPrice < asset.price) {
-        const stopLossMultiplier = 1 + (stopLossThreshold / 100);
-        position.stopLossPrice = asset.price * stopLossMultiplier; // Set to configured threshold above new price
+      // For existing positions (where stopLossPrice is not 0), calculate new stop loss based on threshold from current price
+      // but keep the better (higher) value between calculated and existing stop loss price
+      if (position.stopLossPrice !== 0) {
+        const stopLossMultiplier = 1 - (stopLossThreshold / 100);
+        const calculatedStopLoss = asset.price * stopLossMultiplier;
+        // Keep the better (higher) stop loss value - either the calculated one or existing one
+        position.stopLossPrice = Math.max(calculatedStopLoss, position.stopLossPrice);
       }
     })
   } 
   // When the price of an asset decreases, close active positions that were opened at higher prices
   else if (changePercentage < 0) { // Price decreased
     asset.positions.forEach(position => {
-      if (position.isActive && position.openingPrice > asset.price) {
-        // Only close positions that were opened at a higher price than current price
-        position.isActive = false; // Close active positions
+      // Special case: don't close position if stop loss is uninitialized (-1)
+      // and current price is less than opening price
+      // Early return if position should NOT be closed
+      
+      // First, check if position is active
+      if (!position.isActive) {
+        return; // Don't process inactive positions
       }
+      
+      // Second, check if opening price is higher than current asset price
+      if (!(position.openingPrice > asset.price)) {
+        return; // Don't close positions that weren't opened at a higher price
+      }
+      
+      // Third, special case: don't close position if stop loss is uninitialized (-1)
+      // and current price is less than opening price
+      if (position.stopLossPrice === -1 && asset.price < position.openingPrice) {
+        return; // Don't close positions with uninitialized stop loss when price is below opening price
+      }
+      
+      // If we reach here, all conditions are met to close the position
+      // Only close positions that were opened at a higher price than current price
+      position.isActive = false; // Close active positions
     })
   }
 }

@@ -1,6 +1,9 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
 import App from '../App.vue'
+import type { Position } from '../types/position'
+import type { Asset } from '../types/asset'
+import { applyStopLossLogic } from '../portfolioLogic'
 
 describe('Stop Loss Logic Tests', () => {
   // Test that the component mounts and has expected UI elements
@@ -45,5 +48,55 @@ describe('Stop Loss Logic Tests', () => {
     // Check for key structural elements that should exist
     expect(wrapper.find('h1').exists()).toBe(true)
     expect(wrapper.find('button').exists()).toBe(true)
+  })
+
+  // Test case 1: Stop loss price calculation based on correct formula (threshold below current price)
+  it('should calculate stop loss correctly using correct formula', () => {
+    // Create an asset with a position
+    const asset = {
+      name: 'TestAsset',
+      price: 104.56, // Current price
+      previousPrice: 100.00, // Previous price
+      positions: [
+        { openingPrice: 100.00, quantity: 1, stopLossPrice: 101.4232, isActive: true } as Position
+      ]
+    } as Asset
+    
+    // Calculate percentage change (5.56% increase)
+    const changePercentage = ((asset.price - asset.previousPrice) / asset.previousPrice) * 100
+    expect(changePercentage).toBeCloseTo(4.56, 2)
+    
+    // Apply stop loss logic with 3% threshold
+    applyStopLossLogic(asset, changePercentage, 3)
+    
+    // Verify the stop loss price is calculated using correct formula: price * (1 - threshold)
+    // 104.56 * (1 - 0.03) = 104.56 * 0.97 = 101.4232
+    expect(asset.positions[0].stopLossPrice).toBeCloseTo(101.4232, 4) // 104.56 * 0.97 = 101.4232
+  })
+
+  // Test case 3: Position should remain active when stop loss is -1 and current price < opening price
+  it('should keep position active when stop loss price is -1 and current price is less than opening price', () => {
+    // Create an asset with a position that has uninitialized stop loss (-1)
+    // and current price is less than opening price (special case)
+    const asset = {
+      name: 'TestAsset',
+      price: 95.00, // Current price (less than opening price)
+      previousPrice: 100.00, // Previous price
+      positions: [
+        { openingPrice: 100.00, quantity: 1, stopLossPrice: -1, isActive: true } as Position
+      ]
+    } as Asset
+    
+    // Calculate percentage change (5% decrease)
+    const changePercentage = ((asset.price - asset.previousPrice) / asset.previousPrice) * 100
+    expect(changePercentage).toBeCloseTo(-5.00, 2)
+    
+    // Apply stop loss logic with 3% threshold
+    applyStopLossLogic(asset, changePercentage, 3)
+    
+    // Verify the position remains active because:
+    // 1. stopLossPrice is -1 (uninitialized) 
+    // 2. current price (95.00) < opening price (100.00)
+    expect(asset.positions[0].isActive).toBe(true)
   })
 })

@@ -22,8 +22,8 @@ import PositionDisplay from './components/PositionDisplay.vue'
 const portfolio = reactive<Portfolio>({
   assets: [],
   upwardThreshold: 5,
-  downwardThreshold: 5,
-  stopLossThreshold: 5 // New stop loss threshold
+  downwardThreshold: 50,
+  stopLossThreshold: 3 // New stop loss threshold
 })
 
 // Number of assets to generate
@@ -39,11 +39,10 @@ function generatePortfolio(): void {
     for (let i = currentAssetCount; i < targetAssetCount; i++) {
       const assetName = generateRandomWord()
       const initialPrice = 100
-      const stopLossMultiplier = 1 + (portfolio.stopLossThreshold / 100);
       const newPosition: Position = {
         openingPrice: initialPrice,
         quantity: 1,
-        stopLossPrice: initialPrice * stopLossMultiplier, // Stop loss based on configured threshold
+        stopLossPrice: -1, // Initial positions should start with stop loss price of -1
         isActive: true
       }
       
