@@ -73,7 +73,7 @@ function addPositionWhenThresholdCrossed(asset: Asset, changePercentage: number)
       openingPrice: newPrice,
       quantity: 1,
       stopLossPrice: newPrice * 1.05, // 5% higher than new price
-      isActive: false
+      isActive: true
     }
     
     asset.positions.push(newPosition)
