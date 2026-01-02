@@ -19,7 +19,7 @@ The portfolio simulation tracks multiple positions for each asset instead of a s
 ### Position Tracking
 - Each position records its opening price when created
 - Positions include quantity and stop loss price information
-- Stop loss prices are set at 5% higher than the opening price for new positions
+- Stop loss prices are set to -1 for new positions (uninitialized)
 - Stop loss prices are updated dynamically when asset prices rise above previous stop loss levels
 
 ## Implementation Logic
@@ -29,7 +29,7 @@ The portfolio simulation tracks multiple positions for each asset instead of a s
 - Each position object contains:
   - `openingPrice`: The price at which the position was opened
   - `quantity`: The number of units in the position (always 1 in this implementation)
-  - `stopLossPrice`: The stop loss price set at 5% above opening price
+  - `stopLossPrice`: The stop loss price set to -1 for new positions (uninitialized)
   - `isActive`: Boolean flag indicating if the position is active
 
 ### Key Functions
@@ -51,8 +51,8 @@ The portfolio simulation tracks multiple positions for each asset instead of a s
 - **Implementation**:
   - Checks if changePercentage >= upThreshold OR changePercentage <= -downThreshold
   - If threshold is crossed, adds a new position with current price
-  - Sets stopLossPrice at 5% higher than new price (newPrice * 1.05)
-  - Sets quantity to 1 and isActive to false for new positions
+  - Sets stopLossPrice to -1 for new positions (uninitialized)
+  - Sets quantity to 1 and isActive to true for new positions
 
 #### renderPortfolio()
 - **Purpose**: Renders the portfolio by creating HTML elements for each asset
@@ -101,8 +101,8 @@ The portfolio simulation tracks multiple positions for each asset instead of a s
 - When a threshold is crossed, a new position is created with:
   - Opening price = current asset price
   - Quantity = 1
-  - Stop loss price = opening price * 1.05 (5% higher than opening price)
-  - Active status = false
+  - Stop loss price = -1 (uninitialized)
+  - Active status = true
 
 ### Position Management
 - Positions are stored as an array for each asset

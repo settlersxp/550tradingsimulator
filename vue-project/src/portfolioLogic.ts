@@ -70,7 +70,7 @@ export function openNewPosition(asset: Asset): void {
 // Apply stop loss logic based on price changes
 export function applyStopLossLogic(asset: Asset, changePercentage: number, stopLossThreshold: number): void {
   // When the price of an asset increases, increase stop loss for all positions
-  // as long as current take profit price is lower than new price
+  // as long as the calculated stop loss is higher than the current stop loss
   if (changePercentage > 0) { // Price increased
     asset.positions.forEach(position => {
       // Do not update the stop loss for positions just opened or with no change
