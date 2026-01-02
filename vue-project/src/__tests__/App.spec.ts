@@ -19,9 +19,9 @@ describe('App', () => {
     // Check that we have portfolio info
     expect(wrapper.find('.portfolio-info').exists()).toBe(true)
     
-    // Check for update button
+    // Check for generate button
     expect(wrapper.find('button').exists()).toBe(true)
-    expect(wrapper.find('button').text()).toContain('Update Portfolio')
+    expect(wrapper.find('button').text()).toContain('Generate')
   })
   
   it('initializes with correct default values', () => {

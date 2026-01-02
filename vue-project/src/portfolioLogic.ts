@@ -15,13 +15,14 @@ export function generateRandomWord(): string {
 }
 
 // Add a new position when price thresholds are crossed
-export function addPositionWhenThresholdCrossed(asset: Asset, changePercentage: number): void {
+export function addPositionWhenThresholdCrossed(asset: Asset, changePercentage: number, stopLossThreshold: number): void {
   // When price threshold is crossed (5% increase or decrease), create a new position
   if (Math.abs(changePercentage) >= 5) {
+    const stopLossMultiplier = 1 + (stopLossThreshold / 100);
     const newPosition = {
       openingPrice: asset.price,
       quantity: 1,
-      stopLossPrice: asset.price * 1.05, // 5% higher than opening price
+      stopLossPrice: asset.price * stopLossMultiplier, // Stop loss based on configured threshold
       isActive: true
     };
     asset.positions.push(newPosition);
@@ -29,7 +30,7 @@ export function addPositionWhenThresholdCrossed(asset: Asset, changePercentage: 
 }
 
 // Apply stop loss logic based on price changes
-export function applyStopLossLogic(asset: Asset, changePercentage: number): void {
+export function applyStopLossLogic(asset: Asset, changePercentage: number, stopLossThreshold: number): void {
   // When the price of an asset increases, increase stop loss for all positions
   // as long as current take profit price is lower than new price
   if (changePercentage > 0) { // Price increased
@@ -37,7 +38,8 @@ export function applyStopLossLogic(asset: Asset, changePercentage: number): void
       // Increase stop loss for all positions when price increases
       // and the current stop loss is less than the new price
       if (position.stopLossPrice < asset.price) {
-        position.stopLossPrice = asset.price * 1.05; // Set to 5% above new price
+        const stopLossMultiplier = 1 + (stopLossThreshold / 100);
+        position.stopLossPrice = asset.price * stopLossMultiplier; // Set to configured threshold above new price
       }
     })
   } 

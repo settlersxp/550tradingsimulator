@@ -39,10 +39,11 @@ function generatePortfolio(): void {
     for (let i = currentAssetCount; i < targetAssetCount; i++) {
       const assetName = generateRandomWord()
       const initialPrice = 100
+      const stopLossMultiplier = 1 + (portfolio.stopLossThreshold / 100);
       const newPosition: Position = {
         openingPrice: initialPrice,
         quantity: 1,
-        stopLossPrice: initialPrice * 1.05, // 5% higher than opening price
+        stopLossPrice: initialPrice * stopLossMultiplier, // Stop loss based on configured threshold
         isActive: true
       }
       
@@ -90,13 +91,22 @@ function updatePortfolio(): void {
     const changePercentage = ((asset.price - asset.previousPrice) / asset.previousPrice) * 100;
     
     // Apply threshold crossing logic to add new positions when thresholds are crossed
-    addPositionWhenThresholdCrossed(asset, changePercentage);
+    addPositionWhenThresholdCrossed(asset, changePercentage, portfolio.stopLossThreshold);
     
     // Apply stop loss logic based on price changes
-    applyStopLossLogic(asset, changePercentage);
+    applyStopLossLogic(asset, changePercentage, portfolio.stopLossThreshold);
   })
   
   generatePortfolio()
+}
+
+// Reinitialize the portfolio while preserving threshold values
+function reinitialize(): void {
+  // Reset assets array to empty
+  portfolio.assets = [];
+  
+  // Regenerate portfolio with current settings
+  generatePortfolio();
 }
 
 // Initialize portfolio on component mount
@@ -160,7 +170,8 @@ watch(numberOfAssets, (newVal, oldVal) => {
         />
       </div>
       
-      <button @click="updatePortfolio">Update Portfolio</button>
+      <button @click="updatePortfolio">Generate</button>
+      <button @click="reinitialize">Reinitialize</button>
     </div>
     
     <div class="portfolio-info">
@@ -235,6 +246,7 @@ button {
   cursor: pointer;
   font-size: 16px;
   align-self: flex-end;
+  margin-left: 10px;
 }
 
 button:hover {

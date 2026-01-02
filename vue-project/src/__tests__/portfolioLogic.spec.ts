@@ -170,7 +170,7 @@ describe('Portfolio Logic Functions', () => {
     expect(changePercentage).toBeGreaterThan(5);
     
     // Call the function to test that it creates a new position with isActive = true
-    addPositionWhenThresholdCrossed(asset, changePercentage);
+    addPositionWhenThresholdCrossed(asset, changePercentage, 5);
     
     // Check that a new position was created
     expect(asset.positions).toHaveLength(2); // Should now have 2 positions
@@ -212,7 +212,7 @@ describe('Portfolio Logic Functions', () => {
     expect(changePercentage).toBeLessThan(-5); // Price dropped more than 5% 
     
     // Use the actual exported function to test the fixed logic
-    applyStopLossLogic(asset, changePercentage);
+    applyStopLossLogic(asset, changePercentage, 5);
     
     // - Position opened at $100.00 should be closed (higher than current price $99.33)
     expect(asset.positions[0].isActive).toBe(false); 

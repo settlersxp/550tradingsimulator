@@ -23,9 +23,9 @@ describe('Component Logic Tests', () => {
     // Check for portfolio info section  
     expect(wrapper.find('.portfolio-info').exists()).toBe(true)
     
-    // Check that we have the update button
+    // Check that we have the generate button
     expect(wrapper.find('button').exists()).toBe(true)
-    expect(wrapper.find('button').text()).toContain('Update Portfolio')
+    expect(wrapper.find('button').text()).toContain('Generate')
   })
 
   // Test that component contains expected structure
