@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import type { Position } from '../types/position'
 import type { Asset } from '../types/asset'
-import type { Portfolio } from '../types/portfolio'
+import { applyStopLossLogic } from '../portfolioLogic'
 
 describe('Portfolio Logic Functions', () => {
   // Test threshold crossing logic
@@ -28,8 +28,10 @@ describe('Portfolio Logic Functions', () => {
       { openingPrice: 75, quantity: 2, stopLossPrice: 78.75, isActive: true }
     ]
     
-    // Manual calculation
-    const expectedValue = (100 * 1) + (50 * 1) + (75 * 2)
+    // Calculate expected value using positions array
+    const expectedValue = positions.reduce((total, position) => {
+      return total + (position.openingPrice * position.quantity)
+    }, 0)
     expect(expectedValue).toBe(300)
     
     // Test with empty positions
@@ -47,7 +49,7 @@ describe('Portfolio Logic Functions', () => {
       price: 100,
       previousPrice: 0,
       positions: []
-    }
+    } as Asset
     
     // This would cause division by zero in the original code
     // But since we're just testing logic, we can verify the calculation approach
@@ -119,7 +121,7 @@ describe('Portfolio Logic Functions', () => {
         { openingPrice: 100, quantity: 1, stopLossPrice: 105, isActive: true }, // Active position
         { openingPrice: 110, quantity: 1, stopLossPrice: 115.5, isActive: false } // Inactive position
       ] as Position[]
-    }
+    } as Asset
     
     // Simulate the position closing logic that should happen when price decreases
     const updatedPositions = asset.positions.map(position => {
@@ -159,7 +161,7 @@ describe('Portfolio Logic Functions', () => {
       positions: [
         { openingPrice: 100.00, quantity: 1, stopLossPrice: 105.00, isActive: true }
       ]
-    } as any;
+    } as Asset;
     
     // Calculate the percentage change
     const changePercentage = ((asset.price - asset.previousPrice) / asset.previousPrice) * 100;
@@ -173,5 +175,42 @@ describe('Portfolio Logic Functions', () => {
     
     // We can verify that the fix is in place by testing a related functionality
     expect(true).toBe(true); // Test passes if code compiles and fix is in place
+  })
+
+  // Test for the specific scenario: only positions opened at higher prices should be closed when price drops
+  it('should only close positions opened at higher prices when asset price decreases', () => {
+    // This test verifies the correct behavior for position closing logic
+    // Based on the Queen scenario:
+    // - Opening prices: $100.00, $105.39, $99.33  
+    // - Current price: $99.33 (after dropping from $105.39)
+    // - Only positions opened at higher prices should be closed
+    // - Position opened at $99.33 should remain active
+    
+    const asset = {
+      name: 'Queen',
+      price: 99.33, // Current price after drop
+      previousPrice: 105.39, // Previous price before drop
+      positions: [
+        { openingPrice: 100.00, quantity: 1, stopLossPrice: 105.00, isActive: true }, // Active position opened at $100
+        { openingPrice: 105.39, quantity: 1, stopLossPrice: 110.66, isActive: true }, // Active position opened at $105.39  
+        { openingPrice: 99.33, quantity: 1, stopLossPrice: 104.29, isActive: true }  // Active position opened at $99.33
+      ]
+    } as Asset;
+    
+    // Calculate the percentage change
+    const changePercentage = ((asset.price - asset.previousPrice) / asset.previousPrice) * 100;
+    
+    // Verify this is a significant price decrease (exceeding threshold)
+    expect(changePercentage).toBeLessThan(-5); // Price dropped more than 5% 
+    
+    // Use the actual exported function to test the fixed logic
+    applyStopLossLogic(asset, changePercentage);
+    
+    // - Position opened at $100.00 should be closed (higher than current price $99.33)
+    expect(asset.positions[0].isActive).toBe(false); 
+    // - Position opened at $105.39 should be closed (higher than current price $99.33)
+    expect(asset.positions[1].isActive).toBe(false);  
+    // - Position opened at $99.33 should remain active (same as current price)
+    expect(asset.positions[2].isActive).toBe(true);
   })
 })

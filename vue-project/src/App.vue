@@ -1,13 +1,6 @@
 <script setup lang="ts">
 import { ref, reactive, watch } from 'vue'
-
-// Word list for generating random asset names
-const wordList = [
-  'Apple', 'Banana', 'Cherry', 'Dragon', 'Elephant', 'Flower', 'Guitar', 'Harmony',
-  'Iris', 'Jungle', 'Kite', 'Lion', 'Mountain', 'Night', 'Ocean', 'Piano',
-  'Queen', 'River', 'Sun', 'Tree', 'Umbrella', 'Violin', 'Water', 'Xylophone',
-  'Yacht', 'Zebra', 'Air', 'Beam', 'Cloud', 'Dance', 'Eagle', 'Fire'
-]
+import { generateRandomWord, addPositionWhenThresholdCrossed, applyStopLossLogic, calculateTotalValue } from './portfolioLogic'
 
 // Position data structure
 import type { Position } from './types/position'
@@ -27,12 +20,6 @@ const portfolio = reactive<Portfolio>({
 
 // Number of assets to generate
 const numberOfAssets = ref(5)
-
-// Generate a random word from the word list
-function generateRandomWord(): string {
-  const randomIndex = Math.floor(Math.random() * wordList.length)
-  return wordList[randomIndex] || ""
-}
 
 // Generate or update portfolio assets
 function generatePortfolio(): void {
@@ -65,59 +52,9 @@ function generatePortfolio(): void {
   // If targetAssetCount === currentAssetCount, do nothing
 }
 
-// Add a new position when price thresholds are crossed
-function addPositionWhenThresholdCrossed(asset: Asset, changePercentage: number): void {
-  if (changePercentage >= portfolio.upwardThreshold || changePercentage <= -portfolio.downwardThreshold) {
-    const newPrice = asset.price
-    const newPosition: Position = {
-      openingPrice: newPrice,
-      quantity: 1,
-      stopLossPrice: newPrice * 1.05, // 5% higher than new price
-      isActive: true
-    }
-    
-    asset.positions.push(newPosition)
-    
-    // Update stop loss prices for existing positions if current price exceeds previous stop loss levels
-    asset.positions.forEach(position => {
-      if (position.stopLossPrice < newPrice) {
-        position.stopLossPrice = newPrice * 1.05
-      }
-    })
-  }
-}
-
-// Apply stop loss logic based on price changes
-function applyStopLossLogic(asset: Asset, changePercentage: number): void {
-  // When the price of an asset increases, increase stop loss for all positions
-  // as long as current take profit price is lower than new price
-  if (changePercentage > 0) { // Price increased
-    asset.positions.forEach(position => {
-      // Increase stop loss for all positions when price increases
-      // and the current stop loss is less than the new price
-      if (position.stopLossPrice < asset.price) {
-        position.stopLossPrice = asset.price * 1.05; // Set to 5% above new price
-      }
-    })
-  } 
-  // When the price of an asset decreases, close all active positions
-  else if (changePercentage < 0) { // Price decreased
-    asset.positions.forEach(position => {
-      if (position.isActive) {
-        position.isActive = false; // Close active positions
-      }
-    })
-  }
-}
-
 // Calculate total portfolio value
-function calculateTotalValue(): number {
-  return portfolio.assets.reduce((total, asset) => {
-    const assetValue = asset.positions.reduce((assetTotal, position) => {
-      return assetTotal + (position.openingPrice * position.quantity)
-    }, 0)
-    return total + assetValue
-  }, 0)
+function getTotalValue(): number {
+  return calculateTotalValue(portfolio.assets)
 }
 
 // Update portfolio with new prices
@@ -198,7 +135,7 @@ watch(numberOfAssets, (newVal, oldVal) => {
     </div>
     
     <div class="portfolio-info">
-      <h2>Portfolio Value: ${{ calculateTotalValue().toFixed(2) }}</h2>
+      <h2>Portfolio Value: ${{ getTotalValue().toFixed(2) }}</h2>
     </div>
     
     <div class="assets-container">
