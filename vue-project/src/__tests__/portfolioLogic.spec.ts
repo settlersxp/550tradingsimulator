@@ -183,8 +183,35 @@ describe('Portfolio Logic Functions', () => {
     // The new position should have correct values
     expect(newPosition.openingPrice).toBe(108.11);
     expect(newPosition.quantity).toBe(1);
-    // With our new implementation, stopLossPrice should be 0 for new positions (not calculated as 5% above opening price)
+    // With our new implementation, stopLossPrice should be -1 for new positions (not calculated as 5% above opening price)
     expect(newPosition.stopLossPrice).toBe(-1);
+  })
+
+  // Test that newly created positions don't have their stop loss set when price increases
+  it('should not set stop loss for newly created positions when price increases', () => {
+    // Create an asset with a newly created position (stopLossPrice = -1)
+    const asset: Asset = {
+      name: 'TestAsset',
+      price: 107.88, // Current price after increase
+      previousPrice: 100.00, // Previous price
+      positions: [
+        { openingPrice: 100.00, quantity: 1, stopLossPrice: 105.00, isActive: true }, // Existing position
+        { openingPrice: 107.88, quantity: 1, stopLossPrice: -1, isActive: true } // Newly created position with same price
+      ]
+    }
+    
+    // Calculate percentage change (7.88% increase)
+    const changePercentage = ((asset.price - asset.previousPrice) / asset.previousPrice) * 100;
+    expect(changePercentage).toBeCloseTo(7.88, 2);
+    
+    // Apply stop loss logic with 5% threshold
+    applyStopLossLogic(asset, changePercentage, 5);
+    
+    // Verify that existing position stop loss was updated
+    expect(asset.positions[0].stopLossPrice).toBe(105.00);
+    
+    // Verify that newly created position stop loss remains -1 (not updated)
+    expect(asset.positions[1].stopLossPrice).toBe(-1);
   })
 
   // Test for the specific scenario: only positions opened at higher prices should be closed when price drops

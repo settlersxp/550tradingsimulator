@@ -92,4 +92,53 @@ describe('Downward Threshold Logic', () => {
     // Should not create a new position since the difference is 0% < 50% threshold
     expect(asset.positions).toHaveLength(initialPositionCount + 1)
   })
+
+    // Test the exact scenario from the bug report
+  it('should NOT create new position when price movement is less than downward threshold', () => {
+    // Exact scenario from bug report:
+    // Current Price: $95.56
+    // Previous Price: $100.00  
+    // Downward Threshold (%): 50
+    // Difference: (100.00 - 95.56) / 100.00 * 100 = 4.44%
+    // Since 4.44% < 50%, no new position should be created
+    
+    const asset = {
+      name: 'TestAsset',
+      price: 95.56, // Current price
+      previousPrice: 100.00, // Previous price
+      positions: [
+        { openingPrice: 100.00, quantity: 1, stopLossPrice: 105.00, isActive: true }
+      ]
+    } as Asset
+    
+    const initialPositionCount = asset.positions.length
+    addPositionWhenThresholdCrossed(asset, 50) // Using downward threshold of 50%
+    
+    // Should not create a new position since 4.44% < 50% downward threshold
+    expect(asset.positions).toHaveLength(initialPositionCount)
+  })
+
+  it('should create new position when price movement exceeds downward threshold', () => {
+    // Test that the function still works correctly when threshold IS exceeded
+    // Current Price: $49.00 (49% below original price)
+    // Previous Price: $100.00
+    // Downward Threshold (%): 50
+    // Difference: (100.00 - 49.00) / 100.00 * 100 = 51%
+    // Since 51% > 50%, new position SHOULD be created
+    
+    const asset = {
+      name: 'TestAsset',
+      price: 49.00, // Current price  
+      previousPrice: 100.00, // Previous price
+      positions: [
+        { openingPrice: 100.00, quantity: 1, stopLossPrice: 105.00, isActive: true }
+      ]
+    } as Asset
+    
+    const initialPositionCount = asset.positions.length
+    addPositionWhenThresholdCrossed(asset, 50) // Using downward threshold of 50%
+    
+    // Should create a new position since 51% > 50% downward threshold
+    expect(asset.positions).toHaveLength(initialPositionCount + 1)
+  })
 })

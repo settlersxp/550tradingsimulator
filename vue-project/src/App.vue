@@ -6,11 +6,9 @@ import {
   applyStopLossLogic,
   calculateTotalValue,
   calculateActivePositionsValue,
-  calculateClosedPositionsValue
+  calculateClosedPositionsValue,
+  openNewPosition
  } from './portfolioLogic'
-
-// Position data structure
-import type { Position } from './types/position'
 
 // Portfolio data structure
 import type { Portfolio } from './types/portfolio'
@@ -39,19 +37,16 @@ function generatePortfolio(): void {
     for (let i = currentAssetCount; i < targetAssetCount; i++) {
       const assetName = generateRandomWord()
       const initialPrice = 100
-      const newPosition: Position = {
-        openingPrice: initialPrice,
-        quantity: 1,
-        stopLossPrice: -1, // Initial positions should start with stop loss price of -1
-        isActive: true
-      }
       
-      portfolio.assets.push({
+      const newAsset = {
         name: assetName,
         price: initialPrice,
         previousPrice: initialPrice,
-        positions: [newPosition]
-      })
+        positions: []
+      }
+      
+      portfolio.assets.push(newAsset)
+      openNewPosition(newAsset)
     }
   } else if (targetAssetCount < currentAssetCount) {
     // Decreasing number of assets - remove excess ones
@@ -90,7 +85,7 @@ function updatePortfolio(): void {
     const changePercentage = ((asset.price - asset.previousPrice) / asset.previousPrice) * 100;
     
     // Apply threshold crossing logic to add new positions when thresholds are crossed
-    addPositionWhenThresholdCrossed(asset, portfolio.stopLossThreshold);
+    addPositionWhenThresholdCrossed(asset, portfolio.downwardThreshold);
     
     // Apply stop loss logic based on price changes
     applyStopLossLogic(asset, changePercentage, portfolio.stopLossThreshold);

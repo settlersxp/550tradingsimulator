@@ -73,12 +73,16 @@ export function applyStopLossLogic(asset: Asset, changePercentage: number, stopL
   // as long as current take profit price is lower than new price
   if (changePercentage > 0) { // Price increased
     asset.positions.forEach(position => {
-      // For existing positions (where stopLossPrice is not 0), calculate new stop loss based on threshold from current price
-      // but keep the better (higher) value between calculated and existing stop loss price
-      if (position.stopLossPrice !== 0) {
-        const stopLossMultiplier = 1 - (stopLossThreshold / 100);
-        const calculatedStopLoss = asset.price * stopLossMultiplier;
-        // Keep the better (higher) stop loss value - either the calculated one or existing one
+      // Do not update the stop loss for positions just opened or with no change
+      if(asset.price == position.openingPrice){
+        return;
+      }
+
+      const stopLossMultiplier = 1 - (stopLossThreshold / 100);
+      const calculatedStopLoss = asset.price * stopLossMultiplier;
+      
+      // Keep the better (higher) stop loss value - either the calculated one or existing one
+      if (calculatedStopLoss >= position.openingPrice) {
         position.stopLossPrice = Math.max(calculatedStopLoss, position.stopLossPrice);
       }
     })
