@@ -171,7 +171,7 @@ describe('Portfolio Logic Functions', () => {
     
     console.log('should create new positions with isActive = true when thresholds are crossed')
     // Call the function to test that it creates a new position with isActive = true
-    addPositionWhenThresholdCrossed(asset, 5);
+    addPositionWhenThresholdCrossed(asset, 5, 5);
     
     // Check that a new position was created
     expect(asset.positions).toHaveLength(2); // Should now have 2 positions

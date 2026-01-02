@@ -15,9 +15,10 @@ export function generateRandomWord(): string {
 }
 
 // Add a new position when price thresholds are crossed
-export function addPositionWhenThresholdCrossed(asset: Asset, stopLossThreshold: number): void {
+export function addPositionWhenThresholdCrossed(asset: Asset, upwardThreshold: number, downwardThreshold: number): void {
   // Check if we have any positions at all
   const allPositions = asset.positions;
+  const uptrend = asset.price > asset.previousPrice;
   
   if (allPositions.length === 0) {
     // If no positions exist at all, we can create a new one
@@ -25,34 +26,29 @@ export function addPositionWhenThresholdCrossed(asset: Asset, stopLossThreshold:
     return;
   }
   
-  // Get the lowest opening price among ALL positions (active and inactive)
-  const lowestOpeningPrice = Math.min(...allPositions.map(p => p.openingPrice));
+  // Get the highest opening price among ALL positions (active and inactive)
+  const highestOpeningPrice = Math.max(...allPositions.map(p => p.openingPrice));
   
-  // Calculate the percentage difference between current price and lowest opening price
-  const differencePercentage = ((lowestOpeningPrice - asset.price) / lowestOpeningPrice) * 100;
+  // Calculate the percentage difference between current price and highest opening price
+  // This represents how much the price has dropped from the highest position
+  const differencePercentage = Math.abs(((highestOpeningPrice - asset.price) / highestOpeningPrice) * 100);
+  console.log('differencePercentage', differencePercentage);
+  if(differencePercentage == 0){
+    return;
+  }
   
-  // Apply our new logic based on the requirements:
-  // New positions should be opened only if:
-  // 1) The difference between the "current price" and the lowest "opening price" of all the active positions is > "Downward Threshold (%)"
-  // 2) If there are no active positions is the difference between the "current price" and the lowest "opening price" of all the positions is > "Downward Threshold (%)"
-  
-  // Check if we have any active positions
-  const activePositions = allPositions.filter(p => p.isActive);
-  
-  if (activePositions.length > 0) {
-    // Find the lowest opening price among only ACTIVE positions
-    const lowestActiveOpeningPrice = Math.min(...activePositions.map(p => p.openingPrice));
-    const differencePercentageWithActive = Math.abs((lowestActiveOpeningPrice - asset.price) / lowestActiveOpeningPrice) * 100;
+  // Price is going up significantly enough to open a new uptrend position
+  if(uptrend && differencePercentage > upwardThreshold){
+    openNewPosition(asset);
+    return;
+  }
 
-    // Only open new position if the difference with active positions is greater than threshold
-    if (differencePercentageWithActive > stopLossThreshold) {
-      openNewPosition(asset);
-    }
-  } else {
-    // If there are no active positions, check against all positions
-    if (differencePercentage > stopLossThreshold) {
-      openNewPosition(asset);
-    }
+  // Only create new positions if we're dealing with a significant drop (based on downward threshold)
+  // The logic should be: when price drops significantly from the highest opening price, 
+  // we want to add more positions to increase exposure
+  if (!uptrend && differencePercentage > downwardThreshold) {
+    openNewPosition(asset);
+    return;
   }
 }
 

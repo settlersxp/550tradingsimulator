@@ -21,7 +21,7 @@ describe('Downward Threshold Logic', () => {
     // Which is less than the 50% downward threshold
     
     const initialPositionCount = asset.positions.length
-    addPositionWhenThresholdCrossed(asset, 50)
+    addPositionWhenThresholdCrossed(asset, 50, 50)
     
     // Should not create a new position since 7.51% < 50% downward threshold
     expect(asset.positions).toHaveLength(initialPositionCount)
@@ -42,7 +42,7 @@ describe('Downward Threshold Logic', () => {
     // Which equals more more than 50% downward threshold
     
     const initialPositionCount = asset.positions.length
-    addPositionWhenThresholdCrossed(asset, 50)
+    addPositionWhenThresholdCrossed(asset, 5, 50)
     
     // Should create a new position since 50% >= 50% downward threshold
     expect(asset.positions).toHaveLength(initialPositionCount + 1)
@@ -64,7 +64,7 @@ describe('Downward Threshold Logic', () => {
     // Which equals the 50% downward threshold
     
     const initialPositionCount = asset.positions.length
-    addPositionWhenThresholdCrossed(asset, 50)
+    addPositionWhenThresholdCrossed(asset, 5, 50)
     
     // Should create a new position since there are no active positions and 50% >= 50% threshold
     expect(asset.positions).toHaveLength(initialPositionCount + 1)
@@ -87,7 +87,7 @@ describe('Downward Threshold Logic', () => {
     // So a new position should be opened
     
     const initialPositionCount = asset.positions.length
-    addPositionWhenThresholdCrossed(asset, 50)
+    addPositionWhenThresholdCrossed(asset, 5, 50)
     
     // Should not create a new position since the difference is 0% < 50% threshold
     expect(asset.positions).toHaveLength(initialPositionCount + 1)
@@ -112,7 +112,7 @@ describe('Downward Threshold Logic', () => {
     } as Asset
     
     const initialPositionCount = asset.positions.length
-    addPositionWhenThresholdCrossed(asset, 50) // Using downward threshold of 50%
+    addPositionWhenThresholdCrossed(asset, 5, 50) // Using downward threshold of 50%
     
     // Should not create a new position since 4.44% < 50% downward threshold
     expect(asset.positions).toHaveLength(initialPositionCount)
@@ -136,7 +136,7 @@ describe('Downward Threshold Logic', () => {
     } as Asset
     
     const initialPositionCount = asset.positions.length
-    addPositionWhenThresholdCrossed(asset, 50) // Using downward threshold of 50%
+    addPositionWhenThresholdCrossed(asset, 5, 50) // Using downward threshold of 50%
     
     // Should create a new position since 51% > 50% downward threshold
     expect(asset.positions).toHaveLength(initialPositionCount + 1)
