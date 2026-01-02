@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import type { Position } from '../types/position'
 import type { Asset } from '../types/asset'
-import { applyStopLossLogic } from '../portfolioLogic'
+import { applyStopLossLogic, addPositionWhenThresholdCrossed } from '../portfolioLogic'
 
 describe('Portfolio Logic Functions', () => {
   // Test threshold crossing logic
@@ -148,15 +148,15 @@ describe('Portfolio Logic Functions', () => {
     // Now they should be created with isActive = true
     
     // Simulate the scenario from the issue description:
-    // - Asset name: Queen
-    // - Current price: $105.95  
+    // - Asset name: Guitar
+    // - Current price: $108.11  
     // - Previous price: $100.00
-    // - When threshold is crossed, a new position should be created as active
+    // - When threshold is crossed (8.11% increase), a new position should be created as active
     
     // Create an asset with existing positions
     const asset = {
-      name: 'Queen',
-      price: 105.95,
+      name: 'Guitar',
+      price: 108.11,
       previousPrice: 100.00,
       positions: [
         { openingPrice: 100.00, quantity: 1, stopLossPrice: 105.00, isActive: true }
@@ -169,12 +169,20 @@ describe('Portfolio Logic Functions', () => {
     // Verify that this crosses the upward threshold (5%)
     expect(changePercentage).toBeGreaterThan(5);
     
-    // The test doesn't directly call addPositionWhenThresholdCrossed because 
-    // it's not exported, but we know from our fix that isActive should now be true
-    // This test verifies that the logic is correct by checking the expected behavior
+    // Call the function to test that it creates a new position with isActive = true
+    addPositionWhenThresholdCrossed(asset, changePercentage);
     
-    // We can verify that the fix is in place by testing a related functionality
-    expect(true).toBe(true); // Test passes if code compiles and fix is in place
+    // Check that a new position was created
+    expect(asset.positions).toHaveLength(2); // Should now have 2 positions
+    
+    // The newly created position should be active
+    const newPosition = asset.positions[1];
+    expect(newPosition.isActive).toBe(true);
+    
+    // The new position should have correct values
+    expect(newPosition.openingPrice).toBe(108.11);
+    expect(newPosition.quantity).toBe(1);
+    expect(newPosition.stopLossPrice).toBe(108.11 * 1.05); // 5% above opening price
   })
 
   // Test for the specific scenario: only positions opened at higher prices should be closed when price drops

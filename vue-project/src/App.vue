@@ -1,12 +1,16 @@
 <script setup lang="ts">
 import { ref, reactive, watch } from 'vue'
-import { generateRandomWord, addPositionWhenThresholdCrossed, applyStopLossLogic, calculateTotalValue } from './portfolioLogic'
+import { 
+  generateRandomWord,
+  addPositionWhenThresholdCrossed,
+  applyStopLossLogic,
+  calculateTotalValue,
+  calculateActivePositionsValue,
+  calculateClosedPositionsValue
+ } from './portfolioLogic'
 
 // Position data structure
 import type { Position } from './types/position'
-
-// Asset data structure
-import type { Asset } from './types/asset'
 
 // Portfolio data structure
 import type { Portfolio } from './types/portfolio'
@@ -55,6 +59,16 @@ function generatePortfolio(): void {
 // Calculate total portfolio value
 function getTotalValue(): number {
   return calculateTotalValue(portfolio.assets)
+}
+
+// Calculate closed positions value
+function getClosedPositionsValue(): number {
+  return calculateClosedPositionsValue(portfolio.assets)
+}
+
+// Calculate active positions value
+function getActivePositionsValue(): number {
+  return calculateActivePositionsValue(portfolio.assets)
 }
 
 // Update portfolio with new prices
@@ -135,7 +149,9 @@ watch(numberOfAssets, (newVal, oldVal) => {
     </div>
     
     <div class="portfolio-info">
-      <h2>Portfolio Value: ${{ getTotalValue().toFixed(2) }}</h2>
+      <h2>Closed Positions: ${{ getClosedPositionsValue().toFixed(2) }}</h2>
+      <h2>Active Positions: ${{ getActivePositionsValue().toFixed(2) }}</h2>
+      <h2>Total: ${{ getTotalValue().toFixed(2) }}</h2>
     </div>
     
     <div class="assets-container">

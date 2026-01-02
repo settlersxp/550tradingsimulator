@@ -1,6 +1,4 @@
-import type { Position } from './types/position'
 import type { Asset } from './types/asset'
-import type { Portfolio } from './types/portfolio'
 
 // Word list for generating random asset names
 const wordList = [
@@ -18,8 +16,16 @@ export function generateRandomWord(): string {
 
 // Add a new position when price thresholds are crossed
 export function addPositionWhenThresholdCrossed(asset: Asset, changePercentage: number): void {
-  // This function is intentionally left empty as it's not used in the test suite.
-  // It was moved to this file for organization but is still called from App.vue
+  // When price threshold is crossed (5% increase or decrease), create a new position
+  if (Math.abs(changePercentage) >= 5) {
+    const newPosition = {
+      openingPrice: asset.price,
+      quantity: 1,
+      stopLossPrice: asset.price * 1.05, // 5% higher than opening price
+      isActive: true
+    };
+    asset.positions.push(newPosition);
+  }
 }
 
 // Apply stop loss logic based on price changes
@@ -48,9 +54,33 @@ export function applyStopLossLogic(asset: Asset, changePercentage: number): void
 
 // Calculate total portfolio value
 export function calculateTotalValue(portfolioAssets: Asset[]): number {
+  // Calculate the difference between closed positions and active positions
+  const closedPositionsValue = calculateClosedPositionsValue(portfolioAssets);
+  const activePositionsValue = calculateActivePositionsValue(portfolioAssets);
+  return closedPositionsValue - activePositionsValue;
+}
+
+// Calculate value of only active positions
+export function calculateActivePositionsValue(portfolioAssets: Asset[]): number {
   return portfolioAssets.reduce((total, asset) => {
     const assetValue = asset.positions.reduce((assetTotal, position) => {
-      return assetTotal + (position.openingPrice * position.quantity)
+      if (position.isActive) {
+        return assetTotal + (position.openingPrice * position.quantity);
+      }
+      return assetTotal;
+    }, 0)
+    return total + assetValue
+  }, 0)
+}
+
+// Calculate value of only closed positions
+export function calculateClosedPositionsValue(portfolioAssets: Asset[]): number {
+  return portfolioAssets.reduce((total, asset) => {
+    const assetValue = asset.positions.reduce((assetTotal, position) => {
+      if (!position.isActive) {
+        return assetTotal + (position.openingPrice * position.quantity);
+      }
+      return assetTotal;
     }, 0)
     return total + assetValue
   }, 0)
