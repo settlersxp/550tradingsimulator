@@ -32,7 +32,7 @@ export function addPositionWhenThresholdCrossed(asset: Asset, upwardThreshold: n
   // Calculate the percentage difference between current price and highest opening price
   // This represents how much the price has dropped from the highest position
   const differencePercentage = Math.abs(((highestOpeningPrice - asset.price) / highestOpeningPrice) * 100);
-  console.log('differencePercentage', differencePercentage);
+
   if(differencePercentage == 0){
     return;
   }
