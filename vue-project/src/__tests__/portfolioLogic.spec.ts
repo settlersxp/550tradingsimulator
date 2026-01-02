@@ -169,8 +169,9 @@ describe('Portfolio Logic Functions', () => {
     // Verify that this crosses the upward threshold (5%)
     expect(changePercentage).toBeGreaterThan(5);
     
+    console.log('should create new positions with isActive = true when thresholds are crossed')
     // Call the function to test that it creates a new position with isActive = true
-    addPositionWhenThresholdCrossed(asset, changePercentage, 5);
+    addPositionWhenThresholdCrossed(asset, 5);
     
     // Check that a new position was created
     expect(asset.positions).toHaveLength(2); // Should now have 2 positions

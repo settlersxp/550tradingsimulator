@@ -50,7 +50,7 @@ describe('Stop Loss Logic Tests', () => {
     expect(wrapper.find('button').exists()).toBe(true)
   })
 
-  // Test case 1: Stop loss price calculation based on correct formula (threshold below current price)
+  // Stop loss price calculation based on correct formula (threshold below current price)
   it('should calculate stop loss correctly using correct formula', () => {
     // Create an asset with a position
     const asset = {
@@ -74,7 +74,7 @@ describe('Stop Loss Logic Tests', () => {
     expect(asset.positions[0].stopLossPrice).toBeCloseTo(101.4232, 4) // 104.56 * 0.97 = 101.4232
   })
 
-  // Test case 3: Position should remain active when stop loss is -1 and current price < opening price
+  // Position should remain active when stop loss is -1 and current price < opening price
   it('should keep position active when stop loss price is -1 and current price is less than opening price', () => {
     // Create an asset with a position that has uninitialized stop loss (-1)
     // and current price is less than opening price (special case)

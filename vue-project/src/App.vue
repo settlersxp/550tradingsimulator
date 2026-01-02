@@ -90,7 +90,7 @@ function updatePortfolio(): void {
     const changePercentage = ((asset.price - asset.previousPrice) / asset.previousPrice) * 100;
     
     // Apply threshold crossing logic to add new positions when thresholds are crossed
-    addPositionWhenThresholdCrossed(asset, changePercentage, portfolio.stopLossThreshold);
+    addPositionWhenThresholdCrossed(asset, portfolio.stopLossThreshold);
     
     // Apply stop loss logic based on price changes
     applyStopLossLogic(asset, changePercentage, portfolio.stopLossThreshold);

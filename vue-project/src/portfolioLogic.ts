@@ -15,10 +15,44 @@ export function generateRandomWord(): string {
 }
 
 // Add a new position when price thresholds are crossed
-export function addPositionWhenThresholdCrossed(asset: Asset, changePercentage: number, stopLossThreshold: number): void {
-  // When price threshold is crossed (5% increase or decrease), create a new position
-  if (Math.abs(changePercentage) >= 5) {
+export function addPositionWhenThresholdCrossed(asset: Asset, stopLossThreshold: number): void {
+  // Check if we have any positions at all
+  const allPositions = asset.positions;
+  
+  if (allPositions.length === 0) {
+    // If no positions exist at all, we can create a new one
     openNewPosition(asset);
+    return;
+  }
+  
+  // Get the lowest opening price among ALL positions (active and inactive)
+  const lowestOpeningPrice = Math.min(...allPositions.map(p => p.openingPrice));
+  
+  // Calculate the percentage difference between current price and lowest opening price
+  const differencePercentage = ((lowestOpeningPrice - asset.price) / lowestOpeningPrice) * 100;
+  
+  // Apply our new logic based on the requirements:
+  // New positions should be opened only if:
+  // 1) The difference between the "current price" and the lowest "opening price" of all the active positions is > "Downward Threshold (%)"
+  // 2) If there are no active positions is the difference between the "current price" and the lowest "opening price" of all the positions is > "Downward Threshold (%)"
+  
+  // Check if we have any active positions
+  const activePositions = allPositions.filter(p => p.isActive);
+  
+  if (activePositions.length > 0) {
+    // Find the lowest opening price among only ACTIVE positions
+    const lowestActiveOpeningPrice = Math.min(...activePositions.map(p => p.openingPrice));
+    const differencePercentageWithActive = Math.abs((lowestActiveOpeningPrice - asset.price) / lowestActiveOpeningPrice) * 100;
+
+    // Only open new position if the difference with active positions is greater than threshold
+    if (differencePercentageWithActive > stopLossThreshold) {
+      openNewPosition(asset);
+    }
+  } else {
+    // If there are no active positions, check against all positions
+    if (differencePercentage > stopLossThreshold) {
+      openNewPosition(asset);
+    }
   }
 }
 
