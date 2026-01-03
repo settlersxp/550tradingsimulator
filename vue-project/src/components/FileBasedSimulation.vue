@@ -32,6 +32,9 @@ const fileContent = ref<string[]>([])
 // Flag to indicate if we're currently processing prices
 const isProcessing = ref(false)
 
+// Flag to indicate if processing is paused
+const isPaused = ref(false)
+
 // Handle file upload
 function handleFileUpload(event: Event): void {
   const input = event.target as HTMLInputElement
@@ -90,6 +93,15 @@ function processPrices(): void {
 function processNextPrice(index: number): void {
   if (index >= fileContent.value.length) {
     isProcessing.value = false
+    return
+  }
+  
+  // Check if processing is paused
+  if (isPaused.value) {
+    // If paused, we'll check again after a short delay
+    setTimeout(() => {
+      processNextPrice(index)
+    }, 100) // Check every 100ms if still paused
     return
   }
   
@@ -209,6 +221,9 @@ function getActivePositionsValue(): number {
       
       <button @click="processPrices" :disabled="isProcessing">Process Prices</button>
       <button @click="reinitialize">Reinitialize</button>
+      <button @click="isPaused = !isPaused" :disabled="!isProcessing">
+        {{ isPaused ? 'Resume' : 'Pause' }}
+      </button>
     </div>
     
     <div class="portfolio-info">
