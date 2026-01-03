@@ -74,6 +74,11 @@ export function applyStopLossLogic(asset: Asset, changePercentage: number, stopL
         return;
       }
 
+      // Skip stop loss calculation for closed (inactive) positions
+      if (!position.isActive) {
+        return;
+      }
+
       const stopLossMultiplier = 1 - (stopLossThreshold / 100);
       const calculatedStopLoss = asset.price * stopLossMultiplier;
       

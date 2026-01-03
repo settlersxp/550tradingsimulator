@@ -68,7 +68,12 @@ function processPrices(): void {
   const lastIndex = fileContent.value.length - 1
   
   // Create one asset with the specified name
-  const initialPrice = parseFloat(fileContent.value[lastIndex])
+  const lastLine = fileContent.value[lastIndex]
+  if (!lastLine) {
+    alert('No valid price data in file')
+    return
+  }
+  const initialPrice = parseFloat(lastLine)
   if (isNaN(initialPrice)) {
     alert('Invalid price in file')
     return
@@ -91,7 +96,7 @@ function processPrices(): void {
 
 // Process the next price in sequence
 function processNextPrice(index: number): void {
-  if (index >= fileContent.value.length) {
+  if (index >= fileContent.value.length || index < 0) {
     isProcessing.value = false
     return
   }
@@ -106,6 +111,12 @@ function processNextPrice(index: number): void {
   }
   
   const priceStr = fileContent.value[index]
+  if (!priceStr) {
+    console.warn(`Empty or invalid line at index ${index}`)
+    const nextIndex = index - 1
+    processNextPrice(nextIndex)
+    return
+  }
   const nextIndex = index - 1
   const price = parseFloat(priceStr)
   

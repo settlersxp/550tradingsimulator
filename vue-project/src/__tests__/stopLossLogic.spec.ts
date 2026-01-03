@@ -62,6 +62,9 @@ describe('Stop Loss Logic Tests', () => {
       ]
     } as Asset
     
+    // Ensure positions array is not empty
+    expect(asset.positions).toHaveLength(1);
+    
     // Calculate percentage change (5.56% increase)
     const changePercentage = ((asset.price - asset.previousPrice) / asset.previousPrice) * 100
     expect(changePercentage).toBeCloseTo(4.56, 2)
@@ -98,5 +101,36 @@ describe('Stop Loss Logic Tests', () => {
     // 1. stopLossPrice is -1 (uninitialized) 
     // 2. current price (95.00) < opening price (100.00)
     expect(asset.positions[0].isActive).toBe(true)
+  })
+  
+  // Stop loss should not be calculated for closed positions
+  it('should not perform stop loss calculations on closed positions', () => {
+    // Create an asset with both active and closed positions
+    const asset = {
+      name: 'TestAsset',
+      price: 105.00, // Current price (higher than opening price)
+      previousPrice: 100.00, // Previous price
+      positions: [
+        { openingPrice: 100.00, quantity: 1, stopLossPrice: 97.00, isActive: true } as Position,   // Active position
+        { openingPrice: 95.00, quantity: 1, stopLossPrice: 90.25, isActive: false } as Position    // Closed position
+      ]
+    } as Asset
+    
+    // Calculate percentage change (5% increase)
+    const changePercentage = ((asset.price - asset.previousPrice) / asset.previousPrice) * 100
+    expect(changePercentage).toBeCloseTo(5.00, 2)
+    
+    // Store original stop loss prices for verification
+    const originalActiveStopLoss = asset.positions[0].stopLossPrice;
+    const originalClosedStopLoss = asset.positions[1].stopLossPrice;
+    
+    // Apply stop loss logic with 3% threshold
+    applyStopLossLogic(asset, changePercentage, 3)
+    
+    // Verify that the active position's stop loss was updated (since price increased)
+    expect(asset.positions[0].stopLossPrice).toBeGreaterThan(originalActiveStopLoss);
+    
+    // Verify that the closed position's stop loss was NOT updated (should remain unchanged)
+    expect(asset.positions[1].stopLossPrice).toBe(originalClosedStopLoss);
   })
 })
