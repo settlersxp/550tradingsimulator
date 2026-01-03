@@ -15,6 +15,7 @@ import type { Portfolio } from '../types/portfolio'
 
 // Import the PositionDisplay component
 import AssetCard from './AssetCard.vue'
+import PriceControls from './PriceControls.vue'
 
 // Reactive portfolio state
 const portfolio = reactive<Portfolio>({
@@ -121,55 +122,11 @@ watch(numberOfAssets, (newVal, oldVal) => {
   <div class="container">
     <h1>Portfolio Simulation Application</h1>
     
-<div class="controls">
-      <div class="control-group">
-        <label for="assets">Number of Assets:</label>
-        <input 
-          id="assets" 
-          v-model.number="numberOfAssets" 
-          type="number" 
-          min="1" 
-          max="50"
-        />
-      </div>
-      
-      <div class="control-group">
-        <label for="upThreshold">Upward Threshold (%):</label>
-        <input 
-          id="upThreshold" 
-          v-model.number="portfolio.upwardThreshold" 
-          type="number" 
-          min="0" 
-          step="0.1"
-        />
-      </div>
-      
-      <div class="control-group">
-        <label for="downThreshold">Downward Threshold (%):</label>
-        <input 
-          id="downThreshold" 
-          v-model.number="portfolio.downwardThreshold" 
-          type="number" 
-          min="0" 
-          step="0.1"
-        />
-      </div>
-      
-      <div class="control-group">
-        <label for="stopLossThreshold">Stop Loss Threshold (%):</label>
-        <input 
-          id="stopLossThreshold" 
-          v-model.number="portfolio.stopLossThreshold" 
-          type="number" 
-          min="0" 
-          step="0.1"
-        />
-      </div>
-      
-      
-      <button @click="updatePortfolio">Generate</button>
-      <button @click="reinitialize">Reinitialize</button>
-    </div>
+    <PriceControls 
+      :portfolio="portfolio"
+      @generate="updatePortfolio"
+      @reinitialize="reinitialize"
+    />
     
     <div class="portfolio-info">
       <h2>Closed Positions: ${{ getClosedPositionsValue().toFixed(2) }}</h2>
@@ -193,49 +150,6 @@ watch(numberOfAssets, (newVal, oldVal) => {
   margin: 0 auto;
   padding: 20px;
   font-family: Arial, sans-serif;
-}
-
-.controls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  margin-bottom: 30px;
-  padding: 20px;
-  background-color: #f5f5f5;
-  border-radius: 8px;
-}
-
-.control-group {
-  display: flex;
-  flex-direction: column;
-  min-width: 200px;
-}
-
-.control-group label {
-  margin-bottom: 5px;
-  font-weight: bold;
-}
-
-.control-group input {
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-}
-
-button {
-  padding: 10px 20px;
-  background-color: #4CAF50;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 16px;
-  align-self: flex-end;
-  margin-left: 10px;
-}
-
-button:hover {
-  background-color: #45a049;
 }
 
 .portfolio-info {
