@@ -14,14 +14,14 @@ import {
 import type { Portfolio } from '../types/portfolio'
 
 // Import the PositionDisplay component
-import PositionDisplay from './PositionDisplay.vue'
+import AssetCard from './AssetCard.vue'
 
 // Reactive portfolio state
 const portfolio = reactive<Portfolio>({
   assets: [],
   upwardThreshold: 5,
   downwardThreshold: 50,
-  stopLossThreshold: 3 // New stop loss threshold
+  stopLossThreshold: 3
 })
 
 // Number of assets to generate
@@ -42,7 +42,9 @@ function generatePortfolio(): void {
         name: assetName,
         price: initialPrice,
         previousPrice: initialPrice,
-        positions: []
+        positions: [],
+        trendReversed: false,
+        trendReversalPercentage: 10
       }
       
       portfolio.assets.push(newAsset)
@@ -119,7 +121,7 @@ watch(numberOfAssets, (newVal, oldVal) => {
   <div class="container">
     <h1>Portfolio Simulation Application</h1>
     
-    <div class="controls">
+<div class="controls">
       <div class="control-group">
         <label for="assets">Number of Assets:</label>
         <input 
@@ -164,6 +166,7 @@ watch(numberOfAssets, (newVal, oldVal) => {
         />
       </div>
       
+      
       <button @click="updatePortfolio">Generate</button>
       <button @click="reinitialize">Reinitialize</button>
     </div>
@@ -175,23 +178,11 @@ watch(numberOfAssets, (newVal, oldVal) => {
     </div>
     
     <div class="assets-container">
-      <div 
+      <AssetCard 
         v-for="asset in portfolio.assets" 
         :key="asset.name + '-' + Math.random()" 
-        class="asset-card"
-      >
-        <h3>{{ asset.name }}</h3>
-        <p>Current Price: ${{ asset.price.toFixed(2) }}</p>
-        <p>Previous Price: ${{ asset.previousPrice.toFixed(2) }}</p>
-        <div class="positions">
-          <h4>Positions:</h4>
-          <PositionDisplay 
-            v-for="(position, index) in asset.positions" 
-            :key="index"
-            :position="position"
-          />
-        </div>
-      </div>
+        :asset="asset"
+      />
     </div>
   </div>
 </template>
@@ -257,41 +248,8 @@ button:hover {
 
 .assets-container {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 20px;
 }
 
-.asset-card {
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 20px;
-  background-color: #fff;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.asset-card h3 {
-  margin-top: 0;
-  color: #333;
-}
-
-.asset-card p {
-  margin: 5px 0;
-  color: #666;
-}
-
-.positions h4 {
-  margin-top: 15px;
-  margin-bottom: 10px;
-  color: #444;
-}
-
-.positions ul {
-  padding-left: 20px;
-  margin: 0;
-}
-
-.positions li {
-  margin: 5px 0;
-  color: #555;
-}
 </style>

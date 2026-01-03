@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
-import App from '../App.vue'
+import PortfolioSimulation from '../components/PortfolioSimulation.vue'
 
 describe('End-to-End Threshold Crossing Test', () => {
   it('should create new positions when price thresholds are crossed and update stop losses', async () => {
-    const wrapper = mount(App)
+    const wrapper = mount(PortfolioSimulation)
     
     // Wait for initial portfolio generation
     await wrapper.vm.$nextTick()

@@ -1,11 +1,11 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
-import App from '../App.vue'
+import PortfolioSimulation from '../components/PortfolioSimulation.vue'
 
 describe('Asset Number Change Logic', () => {
   // Test that changing the number of assets updates the portfolio through UI interaction
   it('should handle asset number changes through UI interactions without errors', async () => {
-    const wrapper = mount(App)
+    const wrapper = mount(PortfolioSimulation)
     
     // Verify component mounts correctly
     expect(wrapper.exists()).toBe(true)
@@ -29,7 +29,7 @@ describe('Asset Number Change Logic', () => {
 
   // Test that UI updates correctly when number of assets changes through user interactions
   it('should respond to asset number changes through UI interactions', async () => {
-    const wrapper = mount(App)
+    const wrapper = mount(PortfolioSimulation)
     
     // Verify component mounts and has expected elements
     expect(wrapper.exists()).toBe(true)
@@ -51,7 +51,7 @@ describe('Asset Number Change Logic', () => {
 
   // Test that component handles asset number changes without errors, focusing on behavior rather than state
   it('should handle asset number changes without throwing errors', async () => {
-    const wrapper = mount(App)
+    const wrapper = mount(PortfolioSimulation)
     
     // Verify initial component state
     expect(wrapper.exists()).toBe(true)

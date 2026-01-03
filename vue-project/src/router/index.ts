@@ -1,5 +1,4 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import App from '../App.vue'
 import FileBasedSimulation from '../components/FileBasedSimulation.vue'
 import Layout from '../components/Layout.vue'
 import PortfolioSimulation from '../components/PortfolioSimulation.vue'

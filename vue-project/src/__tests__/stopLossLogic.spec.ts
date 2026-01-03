@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
-import App from '../App.vue'
+import PortfolioSimulation from '../components/PortfolioSimulation.vue'
 import type { Position } from '../types/position'
 import type { Asset } from '../types/asset'
 import { applyStopLossLogic } from '../portfolioLogic'
@@ -8,7 +8,7 @@ import { applyStopLossLogic } from '../portfolioLogic'
 describe('Stop Loss Logic Tests', () => {
   // Test that the component mounts and has expected UI elements
   it('should mount successfully and display expected UI elements', () => {
-    const wrapper = mount(App)
+    const wrapper = mount(PortfolioSimulation)
     
     // Verify the component exists and has basic structure
     expect(wrapper.exists()).toBe(true)
@@ -20,7 +20,7 @@ describe('Stop Loss Logic Tests', () => {
 
   // Test that component responds to user interactions without errors
   it('should handle user interactions without errors', () => {
-    const wrapper = mount(App)
+    const wrapper = mount(PortfolioSimulation)
     
     // Verify component mounts successfully
     expect(wrapper.exists()).toBe(true)
@@ -40,7 +40,7 @@ describe('Stop Loss Logic Tests', () => {
 
   // Test that the component structure is correct and can be rendered
   it('should render with correct basic structure', () => {
-    const wrapper = mount(App)
+    const wrapper = mount(PortfolioSimulation)
     
     // Verify component mounts correctly
     expect(wrapper.exists()).toBe(true)
@@ -53,17 +53,21 @@ describe('Stop Loss Logic Tests', () => {
   // Stop loss price calculation based on correct formula (threshold below current price)
   it('should calculate stop loss correctly using correct formula', () => {
     // Create an asset with a position
-    const asset = {
+    const position: Position = {
+      openingPrice: 100.00, 
+      quantity: 1, 
+      stopLossPrice: 101.4232, 
+      isActive: true 
+    };
+    
+    const asset: Asset = {
       name: 'TestAsset',
       price: 104.56, // Current price
       previousPrice: 100.00, // Previous price
-      positions: [
-        { openingPrice: 100.00, quantity: 1, stopLossPrice: 101.4232, isActive: true } as Position
-      ]
-    } as Asset
-    
-    // Ensure positions array is not empty
-    expect(asset.positions).toHaveLength(1);
+      positions: [position],
+      trendReversed: false,
+      trendReversalPercentage: 0
+    };
     
     // Calculate percentage change (5.56% increase)
     const changePercentage = ((asset.price - asset.previousPrice) / asset.previousPrice) * 100
@@ -81,14 +85,21 @@ describe('Stop Loss Logic Tests', () => {
   it('should keep position active when stop loss price is -1 and current price is less than opening price', () => {
     // Create an asset with a position that has uninitialized stop loss (-1)
     // and current price is less than opening price (special case)
-    const asset = {
+    const position: Position = {
+      openingPrice: 100.00, 
+      quantity: 1, 
+      stopLossPrice: -1, 
+      isActive: true 
+    };
+    
+    const asset: Asset = {
       name: 'TestAsset',
       price: 95.00, // Current price (less than opening price)
       previousPrice: 100.00, // Previous price
-      positions: [
-        { openingPrice: 100.00, quantity: 1, stopLossPrice: -1, isActive: true } as Position
-      ]
-    } as Asset
+      positions: [position],
+      trendReversed: false,
+      trendReversalPercentage: 0
+    };
     
     // Calculate percentage change (5% decrease)
     const changePercentage = ((asset.price - asset.previousPrice) / asset.previousPrice) * 100
@@ -106,15 +117,28 @@ describe('Stop Loss Logic Tests', () => {
   // Stop loss should not be calculated for closed positions
   it('should not perform stop loss calculations on closed positions', () => {
     // Create an asset with both active and closed positions
-    const asset = {
+    const activePosition: Position = {
+      openingPrice: 100.00, 
+      quantity: 1, 
+      stopLossPrice: 97.00, 
+      isActive: true 
+    };   // Active position
+    
+    const closedPosition: Position = {
+      openingPrice: 95.00, 
+      quantity: 1, 
+      stopLossPrice: 90.25, 
+      isActive: false 
+    };    // Closed position
+    
+    const asset: Asset = {
       name: 'TestAsset',
       price: 105.00, // Current price (higher than opening price)
       previousPrice: 100.00, // Previous price
-      positions: [
-        { openingPrice: 100.00, quantity: 1, stopLossPrice: 97.00, isActive: true } as Position,   // Active position
-        { openingPrice: 95.00, quantity: 1, stopLossPrice: 90.25, isActive: false } as Position    // Closed position
-      ]
-    } as Asset
+      positions: [activePosition, closedPosition],
+      trendReversed: false,
+      trendReversalPercentage: 0
+    };
     
     // Calculate percentage change (5% increase)
     const changePercentage = ((asset.price - asset.previousPrice) / asset.previousPrice) * 100

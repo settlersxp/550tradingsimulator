@@ -37,6 +37,42 @@ export function addPositionWhenThresholdCrossed(asset: Asset, upwardThreshold: n
     return;
   }
   
+  // Check for trend reversal protection 
+  const trendReversalPercentage = asset.trendReversalPercentage; // Use the asset's trendReversalPercentage (which is required)
+  
+  // Activate trend reversal flag when price drops
+  if (!asset.trendReversed && asset.price < asset.previousPrice) {
+    asset.trendReversed = true;
+    // When trend reversal is triggered, store the current price as the trigger value
+    asset.reverseTrendTriggerValue = asset.price;
+  }
+  
+  // If we're in a trend reversal period, check if we should allow new positions
+  if (asset.trendReversed) {
+    // Calculate how much current price is below the highest opening price
+    const priceBelowTopPercentage = ((highestOpeningPrice - asset.price) / highestOpeningPrice) * 100;
+    
+    // If we're still within trend reversal percentage, prevent new positions
+    if (priceBelowTopPercentage < trendReversalPercentage) {
+      return; // Don't create new positions during trend reversal period
+    }
+    
+    // The main condition for resetting trend reversal:
+    // 1. Current price > old top price (price has recovered above highest opening price)
+    // 2. Current price is trend reversal % lower than old top price (price dropped significantly again)
+    // 3. Current price > reverse trend trigger value (the condition specified in the task - when current price exceeds the trigger value, reset trend reversal)
+    const shouldReset = asset.price > highestOpeningPrice || 
+                        priceBelowTopPercentage >= trendReversalPercentage || 
+                        (asset.reverseTrendTriggerValue !== undefined && asset.price > asset.reverseTrendTriggerValue);
+    
+    if (shouldReset) {
+      console.log("DEBUG: Resetting trend reversal");
+      asset.trendReversed = false;
+      // Reset the reverse trend trigger value when trend reversal is invalidated
+      asset.reverseTrendTriggerValue = undefined;
+    }
+  }
+  
   // Price is going up significantly enough to open a new uptrend position
   if(uptrend && differencePercentage > upwardThreshold){
     openNewPosition(asset);
