@@ -12,8 +12,8 @@ The portfolio simulation tracks multiple positions for each asset instead of a s
 - When updating existing assets, if price thresholds are crossed, a new position is added
 
 ### Threshold Logic
-- Upward threshold: When price increases by X% or more, a new position is created
-- Downward threshold: When price decreases by Y% or more, a new position is created
+- Upward threshold: When price increases by X% or more from the highest opening price among all positions, a new position is created
+- Downward threshold: When price decreases by Y% or more from the highest opening price among all positions, a new position is created
 - New positions are only added when thresholds are crossed (inclusive of threshold values)
 
 ### Position Tracking
@@ -49,10 +49,27 @@ The portfolio simulation tracks multiple positions for each asset instead of a s
 #### addPositionWhenThresholdCrossed()
 - **Purpose**: Adds a new position to an asset when price thresholds are crossed
 - **Implementation**:
-  - Checks if changePercentage >= upThreshold OR changePercentage <= -downThreshold
-  - If threshold is crossed, adds a new position with current price
+  - Checks if we have any positions at all
+  - Gets the highest opening price among ALL positions (active and inactive)
+  - Calculates the percentage difference between current price and highest opening price
+  - If the difference is significant enough based on the upward or downward threshold, adds a new position with current price
   - Sets stopLossPrice to -1 for new positions (uninitialized)
   - Sets quantity to 1 and isActive to true for new positions
+
+#### openNewPosition()
+- **Purpose**: Creates a new position when thresholds are crossed
+- **Implementation**:
+  - Creates a new position object with current asset price as opening price
+  - Sets quantity to 1
+  - Sets stopLossPrice to -1 (uninitialized)
+  - Sets isActive to true
+
+#### applyStopLossLogic()
+- **Purpose**: Updates stop loss prices and closes positions based on price changes
+- **Implementation**:
+  - When price increases: increases stop loss for all positions by applying the stop loss threshold percentage to current price
+  - When price decreases: closes active positions that were opened at higher prices than current price, unless stop loss is uninitialized (-1) and current price is less than opening price
+  - Special handling for newly created positions with stopLossPrice = -1
 
 #### renderPortfolio()
 - **Purpose**: Renders the portfolio by creating HTML elements for each asset
@@ -108,3 +125,38 @@ The portfolio simulation tracks multiple positions for each asset instead of a s
 - Positions are stored as an array for each asset
 - Each position tracks its opening price, quantity, and stop loss price
 - Stop loss prices are dynamically updated when asset prices rise above previous stop loss levels
+- When a new position is created, it has isActive=true by default
+- When asset prices decrease significantly, only positions opened at higher prices than current price are closed
+- Special handling for positions with uninitialized stop loss (-1) to prevent premature closing
+
+### Key Implementation Details
+- The application uses a word list from `vue-project/src/portfolioLogic.ts` containing 40 words for generating random asset names
+- The portfolio includes a stop loss threshold that can be adjusted by users
+- The stop loss logic works by calculating stop loss prices using the formula: price * (1 - threshold_percentage)
+- When price drops below stop loss levels, positions may be closed
+- Special edge case handling for newly created positions with uninitialized stop loss (-1) values
+- Only positions opened at higher prices than current price are eligible to be closed when price decreases
+
+### User Interface Components
+- The main UI is in `vue-project/src/App.vue` 
+- Interactive controls allow users to adjust:
+  - Number of assets (1-50)
+  - Upward threshold percentage (0% and above)
+  - Downward threshold percentage (0% and above) 
+  - Stop loss threshold percentage (0% and above)
+- The UI updates in real-time with portfolio information including:
+  - Closed positions value
+  - Active positions value  
+  - Total portfolio value
+  - Individual asset details including prices and position information
+- Position information is displayed using the `PositionDisplay` component
+
+### Testing
+- Comprehensive tests are located in `vue-project/src/__tests__/`
+- Tests cover various scenarios including:
+  - Threshold crossing logic
+  - Stop loss behavior
+  - Position creation and closing
+  - Edge cases with uninitialized stop loss values
+  - Portfolio value calculations
+  - Asset name generation
