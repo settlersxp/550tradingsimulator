@@ -10,6 +10,7 @@ describe('Trend Reversal Protection Tests', () => {
     const asset: Asset = {
       name: 'TestAsset',
       price: 105.00, // Current price
+      displayPrice: 105.00, // Display price
       previousPrice: 110.00, // Previous price (lower)
       positions: [
         { openingPrice: 100.00, quantity: 1, stopLossPrice: -1, isActive: true } as Position
@@ -31,14 +32,17 @@ describe('Trend Reversal Protection Tests', () => {
   // Test that trend reversal logic prevents new position creation when trend is reversed
   it('should prevent opening new positions during trend reversal period', () => {
     // Create an asset with an existing position
-    const asset = {
+    const asset: Asset = {
       name: 'TestAsset',
       price: 95.00, // Current price (lower than previous)
+      displayPrice: 95.00, // Display price
       previousPrice: 100.00, // Previous price 
       positions: [
         { openingPrice: 100.00, quantity: 1, stopLossPrice: -1, isActive: true } as Position
-      ]
-    } as Asset
+      ],
+      trendReversed: false,
+      trendReversalPercentage: 10
+    }
     
     // Store initial position count
     const initialPositions = asset.positions.length
@@ -71,12 +75,13 @@ describe('Trend Reversal Protection Tests', () => {
     expect(asset.positions).toHaveLength(1)
   })
 
-// Test default trend reversal percentage is 10%
+  // Test default trend reversal percentage is 10%
   it('should use default trend reversal percentage of 10%', () => {
     // We'll test this by checking if the logic properly calculates with 10% threshold
     const asset: Asset = {
       name: 'TestAsset',
       price: 90.00, // Current price (10% below top price)
+      displayPrice: 90.00, // Display price
       previousPrice: 100.00, // Previous price 
       positions: [
         { openingPrice: 100.00, quantity: 1, stopLossPrice: -1, isActive: true } as Position
@@ -163,6 +168,7 @@ describe('Trend Reversal Protection Tests', () => {
     const asset: Asset = {
       name: 'TestAsset',
       price: 91.00, // Current price (lower than previous)
+      displayPrice: 91.00, // Display price
       previousPrice: 100.00, // Previous price 
       positions: [],
       trendReversed: true,

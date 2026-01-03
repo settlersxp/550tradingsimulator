@@ -10,6 +10,8 @@ function increasePrices(): void {
   props.portfolio.assets.forEach((asset) => {
     asset.price += 1
   })
+  // Emit event when prices change
+  emit('prices-changed')
 }
 
 // Function to decrease price by $1 for all assets
@@ -17,10 +19,25 @@ function decreasePrices(): void {
   props.portfolio.assets.forEach((asset) => {
     asset.price = Math.max(0.01, asset.price - 1)
   })
+  // Emit event when prices change
+  emit('prices-changed')
+}
+
+function generate(): void{
+  props.portfolio.assets.forEach((asset)=>{
+    // Simulate price change with random fluctuation
+    const fluctuation = (Math.random() * 20) - 10 // Random number between -10 and 10
+    asset.price = Math.max(0.01, asset.price + fluctuation) // Ensure price doesn't go below 0.01
+  })
+  
+  // Emit event when prices change
+  emit('prices-changed')
 }
 
 // Emit events to parent component
-const emit = defineEmits(['generate', 'reinitialize'])
+const emit = defineEmits(['reinitialize', 'prices-changed'])
+
+// Reset processed assets set after each processing cycle (to ensure clean state)
 </script>
 
 <template>
@@ -72,7 +89,7 @@ const emit = defineEmits(['generate', 'reinitialize'])
     <div class="button-group">
       <button @click="increasePrices">+</button>
       <button @click="decreasePrices">-</button>
-      <button @click="$emit('generate')">Generate</button>
+      <button @click="generate">Generate</button>
       <button @click="$emit('reinitialize')">Reinitialize</button>
     </div>
   </div>

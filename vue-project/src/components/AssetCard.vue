@@ -11,7 +11,7 @@ defineProps<{
   <div class="asset-card">
     <h3>{{ asset.name }}</h3>
     <p>Current Price: ${{ asset.price.toFixed(2) }}</p>
-    <p>Previous Price: ${{ asset.previousPrice.toFixed(2) }}</p>
+    <p>Previous Price: ${{ asset.displayPrice.toFixed(2) }}</p>
     <div class="trend-reversal-input">
       <label for="trendReversal">Trend Reversal %:</label>
       <input 

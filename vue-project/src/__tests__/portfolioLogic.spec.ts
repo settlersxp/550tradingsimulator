@@ -7,11 +7,14 @@ describe('Portfolio Logic Functions', () => {
   // Test threshold crossing logic
   it('should correctly identify when thresholds are crossed', () => {
     // Mock asset data
-    const asset = {
+    const asset: Asset = {
       name: 'TestAsset',
       price: 100,
+      displayPrice: 100,
       previousPrice: 95, 
-      positions: []
+      positions: [],
+      trendReversed: false,
+      trendReversalPercentage: 10
     }
     
     // Calculate percentage change

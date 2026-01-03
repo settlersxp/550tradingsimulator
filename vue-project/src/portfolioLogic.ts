@@ -16,32 +16,44 @@ export function generateRandomWord(): string {
 
 // Add a new position when price thresholds are crossed
 export function addPositionWhenThresholdCrossed(asset: Asset, upwardThreshold: number, downwardThreshold: number): void {
-  // Check if we have any positions at all
-  const allPositions = asset.positions;
+  console.log("DEBUG: addPositionWhenThresholdCrossed called with:", { asset: asset.name, upwardThreshold, downwardThreshold });
+  
   const uptrend = asset.price > asset.previousPrice;
   
-  if (allPositions.length === 0) {
+  console.log("DEBUG: Asset:", asset);
+  console.log("DEBUG: Uptrend:", uptrend);
+  
+  if (asset.positions.length === 0) {
     // If no positions exist at all, we can create a new one
+    console.log("DEBUG: No existing positions, opening new position");
     openNewPosition(asset);
     return;
   }
   
   // Get the highest opening price among ALL positions (active and inactive)
-  const highestOpeningPrice = Math.max(...allPositions.map(p => p.openingPrice));
+  const highestOpeningPrice = Math.max(...asset.positions.map(p => p.openingPrice));
   
   // Calculate the percentage difference between current price and highest opening price
   // This represents how much the price has dropped from the highest position
   const differencePercentage = Math.abs(((highestOpeningPrice - asset.price) / highestOpeningPrice) * 100);
 
+  console.log("DEBUG: Highest opening price:", highestOpeningPrice);
+  console.log("DEBUG: Difference percentage:", differencePercentage);
+  
   if(differencePercentage == 0){
+    console.log('DEBUG: Difference is 0, returning early');
     return;
   }
   
   // Check for trend reversal protection 
   const trendReversalPercentage = asset.trendReversalPercentage; // Use the asset's trendReversalPercentage (which is required)
   
+  console.log("DEBUG: Trend reversal percentage:", trendReversalPercentage);
+  console.log("DEBUG: Asset trend reversed:", asset.trendReversed);
+  
   // Activate trend reversal flag when price drops
   if (!asset.trendReversed && asset.price < asset.previousPrice) {
+    console.log("DEBUG: Trend reversal triggered");
     asset.trendReversed = true;
     // When trend reversal is triggered, store the current price as the trigger value
     asset.reverseTrendTriggerValue = asset.price;
@@ -49,11 +61,15 @@ export function addPositionWhenThresholdCrossed(asset: Asset, upwardThreshold: n
   
   // If we're in a trend reversal period, check if we should allow new positions
   if (asset.trendReversed) {
+    console.log("DEBUG: In trend reversal period");
     // Calculate how much current price is below the highest opening price
     const priceBelowTopPercentage = ((highestOpeningPrice - asset.price) / highestOpeningPrice) * 100;
     
+    console.log("DEBUG: Price below top percentage:", priceBelowTopPercentage);
+    
     // If we're still within trend reversal percentage, prevent new positions
     if (priceBelowTopPercentage < trendReversalPercentage) {
+      console.log("DEBUG: Still within trend reversal percentage, preventing new positions");
       return; // Don't create new positions during trend reversal period
     }
     
@@ -65,6 +81,8 @@ export function addPositionWhenThresholdCrossed(asset: Asset, upwardThreshold: n
                         priceBelowTopPercentage >= trendReversalPercentage || 
                         (asset.reverseTrendTriggerValue !== undefined && asset.price > asset.reverseTrendTriggerValue);
     
+    console.log("DEBUG: Should reset trend reversal:", shouldReset);
+    
     if (shouldReset) {
       console.log("DEBUG: Resetting trend reversal");
       asset.trendReversed = false;
@@ -74,7 +92,9 @@ export function addPositionWhenThresholdCrossed(asset: Asset, upwardThreshold: n
   }
   
   // Price is going up significantly enough to open a new uptrend position
+  console.log("DEBUG: Checking for upward threshold:", { upwardThreshold, differencePercentage });
   if(uptrend && differencePercentage > upwardThreshold){
+    console.log("DEBUG: Opening new position due to upward threshold");
     openNewPosition(asset);
     return;
   }
@@ -82,10 +102,14 @@ export function addPositionWhenThresholdCrossed(asset: Asset, upwardThreshold: n
   // Only create new positions if we're dealing with a significant drop (based on downward threshold)
   // The logic should be: when price drops significantly from the highest opening price, 
   // we want to add more positions to increase exposure
+  console.log("DEBUG: Checking for downward threshold:", { downwardThreshold, differencePercentage });
   if (!uptrend && differencePercentage > downwardThreshold) {
+    console.log("DEBUG: Opening new position due to downward threshold");
     openNewPosition(asset);
     return;
   }
+  
+  console.log("DEBUG: No conditions met for opening new position");
 }
 
 // Create a new position when thresholds are crossed
@@ -124,7 +148,7 @@ export function applyStopLossLogic(asset: Asset, changePercentage: number, stopL
       }
     })
   } 
-  // When the price of an asset decreases, close active positions that were opened at higher prices
+  // When the price of an asset decreases, close active positions that have dropped below stop loss price
   else if (changePercentage < 0) { // Price decreased
     asset.positions.forEach(position => {
       // Special case: don't close position if stop loss is uninitialized (-1)
@@ -136,9 +160,9 @@ export function applyStopLossLogic(asset: Asset, changePercentage: number, stopL
         return; // Don't process inactive positions
       }
       
-      // Second, check if opening price is higher than current asset price
-      if (!(position.openingPrice > asset.price)) {
-        return; // Don't close positions that weren't opened at a higher price
+      // Check if current asset price has dropped below the stop loss price for this position
+      if (asset.price >= position.stopLossPrice) {
+        return; // Don't close positions that haven't dropped below their stop loss price
       }
       
       // Third, special case: don't close position if stop loss is uninitialized (-1)
@@ -148,7 +172,7 @@ export function applyStopLossLogic(asset: Asset, changePercentage: number, stopL
       }
       
       // If we reach here, all conditions are met to close the position
-      // Only close positions that were opened at a higher price than current price
+      // Close positions that have dropped below their stop loss price
       position.isActive = false; // Close active positions
     })
   }

@@ -3,6 +3,7 @@ import type { Position } from './position'
 export interface Asset {
   name: string
   price: number
+  displayPrice: number
   previousPrice: number
   positions: Position[]
   trendReversed: boolean // Store trend reversal flag on asset level

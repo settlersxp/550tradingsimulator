@@ -42,6 +42,7 @@ function generatePortfolio(): void {
       const newAsset = {
         name: assetName,
         price: initialPrice,
+        displayPrice: initialPrice,
         previousPrice: initialPrice,
         positions: [],
         trendReversed: false,
@@ -73,28 +74,26 @@ function getActivePositionsValue(): number {
   return calculateActivePositionsValue(portfolio.assets)
 }
 
-// Update portfolio with new prices
-function updatePortfolio(): void {
-  // Update prices for all assets
-  portfolio.assets.forEach(asset => {
-    // Store previous price before updating
-    asset.previousPrice = asset.price;
-    
-    // Simulate price change with random fluctuation
-    const fluctuation = (Math.random() * 20) - 10 // Random number between -10 and 10
-    asset.price = Math.max(0.01, asset.price + fluctuation) // Ensure price doesn't go below 0.01
-    
-    // Calculate percentage change
-    const changePercentage = ((asset.price - asset.previousPrice) / asset.previousPrice) * 100;
-    
-    // Apply threshold crossing logic to add new positions when thresholds are crossed
-    addPositionWhenThresholdCrossed(asset, portfolio.upwardThreshold, portfolio.downwardThreshold);
-    
-    // Apply stop loss logic based on price changes
-    applyStopLossLogic(asset, changePercentage, portfolio.stopLossThreshold);
-  })
+
+// Process individual asset updates (to be called automatically when prices change)
+function processAssetUpdates(asset: any): void {
+  // Store original previous price before processing
+  const originalPreviousPrice = asset.previousPrice;
   
-  generatePortfolio()
+  // Calculate percentage change using the original previous price
+  const changePercentage = ((asset.price - originalPreviousPrice) / originalPreviousPrice) * 100;
+  
+  // Apply threshold crossing logic to add new positions when thresholds are crossed
+  addPositionWhenThresholdCrossed(asset, portfolio.upwardThreshold, portfolio.downwardThreshold);
+  
+  // Apply stop loss logic based on price changes
+  applyStopLossLogic(asset, changePercentage, portfolio.stopLossThreshold);
+
+  // Update display price to lag by one step - this ensures display shows the value from the previous processing cycle
+  asset.displayPrice = asset.previousPrice;
+
+  // Store previous price after processing (this should be the current price)
+  asset.previousPrice = asset.price;
 }
 
 // Reinitialize the portfolio while preserving threshold values
@@ -116,6 +115,33 @@ watch(numberOfAssets, (newVal, oldVal) => {
     generatePortfolio()
   }
 })
+
+// Debounced function to handle price changes efficiently
+let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+const DEBOUNCE_DELAY = 1; // debounce delay
+
+// Handle price changes automatically with debouncing 
+function onPricesChanged(): void {
+  // Clear previous timer if exists
+  if (debounceTimer) {
+    clearTimeout(debounceTimer);
+  }
+  
+  // Set new timer to process all changes after the debounce period
+  debounceTimer = setTimeout(() => {
+    try {      
+      // Process each asset when prices change
+      portfolio.assets.forEach(asset => {
+        processAssetUpdates(asset)
+      })
+      
+      // Also regenerate portfolio in case number of assets changed
+      generatePortfolio();
+    } catch (error) {
+      console.error('Error processing price changes:', error);
+    }
+  }, DEBOUNCE_DELAY);
+}
 </script>
 
 <template>
@@ -124,8 +150,8 @@ watch(numberOfAssets, (newVal, oldVal) => {
     
     <PriceControls 
       :portfolio="portfolio"
-      @generate="updatePortfolio"
       @reinitialize="reinitialize"
+      @prices-changed="onPricesChanged"
     />
     
     <div class="portfolio-info">
