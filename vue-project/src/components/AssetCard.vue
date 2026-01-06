@@ -40,7 +40,7 @@ defineProps<{
 
 <style scoped>
 .asset-card {
-  border: 1px solid #ddk
+  border: 1px solid;
   border-radius: 8px;
   padding: 20px;
   background-color: #fff;

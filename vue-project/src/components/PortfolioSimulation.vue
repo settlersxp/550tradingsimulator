@@ -46,6 +46,7 @@ function generatePortfolio(): void {
         displayPrice: initialPrice,
         previousPrice: initialPrice,
         positions: [],
+        highestOpeningPrice: initialPrice,
         trendReversed: false,
         trendReversalPercentage: 10
       }

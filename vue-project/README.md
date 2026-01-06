@@ -6,6 +6,44 @@ This application simulates a portfolio with multiple assets, each tracking multi
 
 The portfolio simulation tracks multiple positions for each asset instead of a single position count. Each position records its opening price when created. When price thresholds are met, new positions are added to the list rather than incrementing a count value.
 
+## Project Setup
+
+Before running the application, make sure you have Node.js installed (version 20.19.0 or >=22.12.0 as specified in package.json). 
+
+To set up the project:
+
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+## Running the Application
+
+### Development Server
+To start the development server with hot-reload:
+```bash
+npm run dev
+```
+The application will be available at http://localhost:5173
+
+### Building for Production
+To build the application for production:
+```bash
+npm run build
+```
+
+### Previewing the Build
+To preview the built application:
+```bash
+npm run preview
+```
+
+### Running Tests
+To run the test suite:
+```bash
+npm run test
+```
+
 ### Asset Management
 - Assets are generated with random names from a predefined word list
 - Each asset starts with one initial position at $100

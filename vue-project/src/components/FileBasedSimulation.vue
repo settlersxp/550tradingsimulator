@@ -82,8 +82,10 @@ function processPrices(): void {
   const newAsset = {
     name: assetName.value,
     price: initialPrice,
+    displayPrice: initialPrice,
     previousPrice: initialPrice,
     positions: [],
+    highestOpeningPrice: initialPrice,
     trendReversed: false,
     trendReversalPercentage: 10
   }
