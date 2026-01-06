@@ -39,10 +39,24 @@ npm run preview
 ```
 
 ### Running Tests
-To run the test suite:
+To run the test suite with hotswap:
 ```bash
 npm run test
 ```
+
+When running tests with vitest, the console may get stuck in a hotswap state. To prevent this, use the `--run` flag or the dedicated test script:
+
+```bash
+# Run all tests without watch mode
+npm run test:run
+
+# Run specific test file without watch mode  
+npm run test:run src/__tests__/downwardThreshold.spec.ts
+
+# Alternative using npx
+npx vitest --run
+```
+
 
 ### Asset Management
 - Assets are generated with random names from a predefined word list
