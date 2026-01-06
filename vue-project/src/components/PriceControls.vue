@@ -1,9 +1,18 @@
 <script setup lang="ts">
 import type { Portfolio } from '../types/portfolio'
+import { ref, watch } from 'vue'
 
 const props = defineProps<{
   portfolio: Portfolio
 }>()
+
+// Create a local reference to the number of assets for proper binding
+const assetCount = ref(5)
+
+// Watch for changes in portfolio assets length and update our local reference
+watch(() => props.portfolio.assets.length, (newLength) => {
+  assetCount.value = newLength
+})
 
 // Function to increase price by $1 for all assets
 function increasePrices(): void {
@@ -35,7 +44,7 @@ function generate(): void{
 }
 
 // Emit events to parent component
-const emit = defineEmits(['reinitialize', 'prices-changed'])
+const emit = defineEmits(['reinitialize', 'prices-changed', 'asset-count-change'])
 
 // Reset processed assets set after each processing cycle (to ensure clean state)
 </script>
@@ -46,10 +55,11 @@ const emit = defineEmits(['reinitialize', 'prices-changed'])
       <label for="assets">Number of Assets:</label>
       <input 
         id="assets" 
-        v-model.number="portfolio.assets.length" 
+        v-model.number="assetCount" 
         type="number" 
         min="1" 
         max="50"
+        @change="() => emit('asset-count-change', assetCount)"
       />
     </div>
     

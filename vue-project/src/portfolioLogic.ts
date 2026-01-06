@@ -74,9 +74,16 @@ export function addPositionWhenThresholdCrossed(asset: Asset, upwardThreshold: n
     // 1. Current price > old top price (price has recovered above highest opening price)
     // 2. Current price is trend reversal % lower than old top price (price dropped significantly again)
     // 3. Current price > reverse trend trigger value (the condition specified in the task - when current price exceeds the trigger value, reset trend reversal)
-    const shouldReset = asset.price > asset.highestOpeningPrice || 
-                        priceBelowTopPercentage >= trendReversalPercentage || 
-                        (asset.reverseTrendTriggerValue !== undefined && asset.price > asset.reverseTrendTriggerValue);
+    // 4. Price has increased (current price > previous price) - this is the new requirement from the task
+    const shouldResetCondition1 = asset.price > asset.highestOpeningPrice;
+    const shouldResetCondition2 = priceBelowTopPercentage >= trendReversalPercentage;
+    const shouldResetCondition3 = (asset.reverseTrendTriggerValue !== undefined && asset.price > asset.reverseTrendTriggerValue);
+    const shouldResetCondition4 = asset.price > asset.previousPrice;
+    
+    const shouldReset = shouldResetCondition1 || 
+                        shouldResetCondition2 || 
+                        shouldResetCondition3 ||
+                        shouldResetCondition4;
     
     console.log("DEBUG: Should reset trend reversal:", shouldReset);
     
@@ -144,57 +151,133 @@ export function openNewPosition(asset: Asset): void {
 
 // Apply stop loss logic based on price changes
 export function applyStopLossLogic(asset: Asset, changePercentage: number, stopLossThreshold: number): void {
-  // When the price of an asset increases, increase stop loss for all positions
-  // as long as the calculated stop loss is higher than the current stop loss
-  if (changePercentage > 0) { // Price increased
-    asset.positions.forEach(position => {
-      // Do not update the stop loss for positions just opened or with no change
-      if(asset.price == position.openingPrice){
-        return;
-      }
-
-      // Skip stop loss calculation for closed (inactive) positions
-      if (!position.isActive) {
-        return;
-      }
-
-      const stopLossMultiplier = 1 - (stopLossThreshold / 100);
-      const calculatedStopLoss = asset.price * stopLossMultiplier;
-      
-      // Keep the better (higher) stop loss value - either the calculated one or existing one
-      if (calculatedStopLoss >= position.openingPrice) {
-        position.stopLossPrice = Math.max(calculatedStopLoss, position.stopLossPrice);
-      }
-    })
-  } 
-  // When the price of an asset decreases, close active positions that have dropped below stop loss price
-  else if (changePercentage < 0) { // Price decreased
-    asset.positions.forEach(position => {
-      // Special case: don't close position if stop loss is uninitialized (-1)
-      // and current price is less than opening price
-      // Early return if position should NOT be closed
-      
-      // First, check if position is active
-      if (!position.isActive) {
-        return; // Don't process inactive positions
-      }
-      
-      // Check if current asset price has dropped below the stop loss price for this position
-      if (asset.price >= position.stopLossPrice) {
-        return; // Don't close positions that haven't dropped below their stop loss price
-      }
-      
-      // Third, special case: don't close position if stop loss is uninitialized (-1)
-      // and current price is less than opening price
-      if (position.stopLossPrice === -1 && asset.price < position.openingPrice) {
-        return; // Don't close positions with uninitialized stop loss when price is below opening price
-      }
-      
-      // If we reach here, all conditions are met to close the position
-      // Close positions that have dropped below their stop loss price
-      position.isActive = false; // Close active positions
-    })
+  // DEBUG: Uncomment to enable debug logging
+  // console.log("DEBUG: applyStopLossLogic called with:", { asset: asset.name, changePercentage, stopLossThreshold });
+  
+  // Define clear states for the logic flow
+  const isPriceIncreasing = changePercentage > 0;
+  const isPriceDecreasing = changePercentage < 0;
+  const isPriceUnchanged = changePercentage === 0;
+  
+  // Handle unchanged price case immediately
+  if (isPriceUnchanged) {
+    // DEBUG: Uncomment to enable debug logging
+    // console.log("DEBUG: Price unchanged, no action needed");
+    return; // No action needed when price doesn't change
   }
+  
+  // Process based on price movement direction
+  if (isPriceIncreasing) {
+    // DEBUG: Uncomment to enable debug logging
+    // console.log("DEBUG: Processing price increase");
+    processStopLossIncrease(asset, stopLossThreshold);
+  } else if (isPriceDecreasing) {
+    // DEBUG: Uncomment to enable debug logging
+    // console.log("DEBUG: Processing price decrease");
+    processStopLossDecrease(asset);
+  }
+}
+
+function processStopLossIncrease(asset: Asset, stopLossThreshold: number): void {
+  // DEBUG: Uncomment to enable debug logging
+  // console.log("DEBUG: Processing stop loss increase for asset:", asset.name);
+  
+  // Loop through all positions and update stop loss for active ones
+  asset.positions.forEach(position => {
+    // Define clear conditions for processing each position
+    const isPositionActive = position.isActive;
+    const isPositionNewlyOpened = asset.price === position.openingPrice;
+    
+    // DEBUG: Uncomment to enable debug logging
+    // console.log("DEBUG: Processing position:", { 
+    //   isActive: isPositionActive, 
+    //   isNewlyOpened: isPositionNewlyOpened,
+    //   openingPrice: position.openingPrice,
+    //   currentPrice: asset.price
+    // });
+    
+    // Skip processing if position is inactive or newly opened
+    if (!isPositionActive || isPositionNewlyOpened) {
+      // DEBUG: Uncomment to enable debug logging
+      // console.log("DEBUG: Skipping position processing - inactive or newly opened");
+      return;
+    }
+    
+    // Calculate new stop loss value
+    const stopLossMultiplier = 1 - (stopLossThreshold / 100);
+    const calculatedStopLoss = asset.price * stopLossMultiplier;
+    
+    // DEBUG: Uncomment to enable debug logging
+    // console.log("DEBUG: Calculated stop loss:", { 
+    //   calculatedStopLoss, 
+    //   existingStopLoss: position.stopLossPrice,
+    //   openingPrice: position.openingPrice
+    // });
+    
+    // Update stop loss only when beneficial
+    const isBeneficialToUpdate = calculatedStopLoss >= position.openingPrice;
+    if (isBeneficialToUpdate) {
+      position.stopLossPrice = Math.max(calculatedStopLoss, position.stopLossPrice);
+      // DEBUG: Uncomment to enable debug logging
+      // console.log("DEBUG: Updated stop loss for position:", { 
+      //   newStopLoss: position.stopLossPrice 
+      // });
+    }
+  });
+}
+
+function processStopLossDecrease(asset: Asset): void {
+  // DEBUG: Uncomment to enable debug logging
+  // console.log("DEBUG: Processing stop loss decrease for asset:", asset.name);
+  
+  // Loop through all positions to check for closure
+  asset.positions.forEach(position => {
+    // Define clear conditions for closing positions
+    const isPositionActive = position.isActive;
+    const isBelowStopLoss = asset.price < position.stopLossPrice;
+    const isUninitializedStopLoss = position.stopLossPrice === -1;
+    const isPriceBelowOpening = asset.price < position.openingPrice;
+    
+    // DEBUG: Uncomment to enable debug logging
+    // console.log("DEBUG: Checking position for closure:", { 
+    //   isActive: isPositionActive,
+    //   belowStopLoss: isBelowStopLoss,
+    //   uninitializedStopLoss: isUninitializedStopLoss,
+    //   priceBelowOpening: isPriceBelowOpening,
+    //   currentPrice: asset.price,
+    //   stopLossPrice: position.stopLossPrice,
+    //   openingPrice: position.openingPrice
+    // });
+    
+    // Skip processing if position is inactive
+    if (!isPositionActive) {
+      // DEBUG: Uncomment to enable debug logging
+      // console.log("DEBUG: Skipping closure check - position inactive");
+      return;
+    }
+    
+    // Skip closing if price hasn't dropped below stop loss
+    if (!isBelowStopLoss) {
+      // DEBUG: Uncomment to enable debug logging
+      // console.log("DEBUG: Skipping closure - not below stop loss");
+      return;
+    }
+    
+    // Special case: don't close if stop loss is uninitialized and price is below opening
+    if (isUninitializedStopLoss && isPriceBelowOpening) {
+      // DEBUG: Uncomment to enable debug logging
+      // console.log("DEBUG: Skipping closure - uninitialized stop loss with price below opening");
+      return;
+    }
+    
+    // Close the position since it dropped below stop loss
+    position.isActive = false;
+    // DEBUG: Uncomment to enable debug logging
+    // console.log("DEBUG: Closed position:", { 
+    //   closingPrice: asset.price,
+    //   stopLossPrice: position.stopLossPrice
+    // });
+  });
 }
 
 // Calculate total portfolio value

@@ -144,6 +144,13 @@ function onPricesChanged(): void {
     }
   }, DEBOUNCE_DELAY);
 }
+
+// Handle asset count changes from PriceControls component
+function handleAssetCountChange(newCount: number): void {
+  if (newCount >= 1 && newCount <= 50) {
+    numberOfAssets.value = newCount;
+  }
+}
 </script>
 
 <template>
@@ -154,6 +161,7 @@ function onPricesChanged(): void {
       :portfolio="portfolio"
       @reinitialize="reinitialize"
       @prices-changed="onPricesChanged"
+      @asset-count-change="handleAssetCountChange"
     />
     
     <div class="portfolio-info">

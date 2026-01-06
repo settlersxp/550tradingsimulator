@@ -19,9 +19,16 @@ describe('PortfolioSimulation', () => {
     // Check that we have portfolio info
     expect(wrapper.find('.portfolio-info').exists()).toBe(true)
     
-    // Check for generate button
-    expect(wrapper.find('button').exists()).toBe(true)
-    expect(wrapper.find('button').text()).toContain('Generate')
+    // Check for buttons - there should be 4 buttons: +, -, Generate, Reinitialize
+    const buttons = wrapper.findAll('button')
+    expect(buttons.length).toBe(4)
+    
+    // Verify the button texts are correct
+    const buttonTexts = buttons.map(btn => btn.text())
+    expect(buttonTexts).toContain('+')
+    expect(buttonTexts).toContain('-')
+    expect(buttonTexts).toContain('Generate')
+    expect(buttonTexts).toContain('Reinitialize')
   })
   
   it('initializes with correct default values', () => {
