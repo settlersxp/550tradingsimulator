@@ -16,6 +16,7 @@ import type { Portfolio } from '../types/portfolio'
 // Import the PositionDisplay component
 import AssetCard from './AssetCard.vue'
 import PriceControls from './PriceControls.vue'
+import type { Asset } from '@/types/asset'
 
 // Reactive portfolio state
 const portfolio = reactive<Portfolio>({
@@ -76,7 +77,7 @@ function getActivePositionsValue(): number {
 
 
 // Process individual asset updates (to be called automatically when prices change)
-function processAssetUpdates(asset: any): void {
+function processAssetUpdates(asset: Asset): void {
   // Store original previous price before processing
   const originalPreviousPrice = asset.previousPrice;
   

@@ -30,14 +30,11 @@ export function addPositionWhenThresholdCrossed(asset: Asset, upwardThreshold: n
     return;
   }
   
-  // Get the highest opening price among ALL positions (active and inactive)
-  const highestOpeningPrice = Math.max(...asset.positions.map(p => p.openingPrice));
-  
   // Calculate the percentage difference between current price and highest opening price
   // This represents how much the price has dropped from the highest position
-  const differencePercentage = Math.abs(((highestOpeningPrice - asset.price) / highestOpeningPrice) * 100);
+  const differencePercentage = Math.abs(((asset.highestOpeningPrice - asset.price) / asset.highestOpeningPrice) * 100);
 
-  console.log("DEBUG: Highest opening price:", highestOpeningPrice);
+  console.log("DEBUG: Highest opening price:", asset.highestOpeningPrice);
   console.log("DEBUG: Difference percentage:", differencePercentage);
   
   if(differencePercentage == 0){
@@ -63,7 +60,7 @@ export function addPositionWhenThresholdCrossed(asset: Asset, upwardThreshold: n
   if (asset.trendReversed) {
     console.log("DEBUG: In trend reversal period");
     // Calculate how much current price is below the highest opening price
-    const priceBelowTopPercentage = ((highestOpeningPrice - asset.price) / highestOpeningPrice) * 100;
+    const priceBelowTopPercentage = ((asset.highestOpeningPrice - asset.price) / asset.highestOpeningPrice) * 100;
     
     console.log("DEBUG: Price below top percentage:", priceBelowTopPercentage);
     
@@ -77,7 +74,7 @@ export function addPositionWhenThresholdCrossed(asset: Asset, upwardThreshold: n
     // 1. Current price > old top price (price has recovered above highest opening price)
     // 2. Current price is trend reversal % lower than old top price (price dropped significantly again)
     // 3. Current price > reverse trend trigger value (the condition specified in the task - when current price exceeds the trigger value, reset trend reversal)
-    const shouldReset = asset.price > highestOpeningPrice || 
+    const shouldReset = asset.price > asset.highestOpeningPrice || 
                         priceBelowTopPercentage >= trendReversalPercentage || 
                         (asset.reverseTrendTriggerValue !== undefined && asset.price > asset.reverseTrendTriggerValue);
     
@@ -88,6 +85,16 @@ export function addPositionWhenThresholdCrossed(asset: Asset, upwardThreshold: n
       asset.trendReversed = false;
       // Reset the reverse trend trigger value when trend reversal is invalidated
       asset.reverseTrendTriggerValue = undefined;
+
+      // Outside of the trendReversed while there are active positions, the highestOpeningPrice equals the max opening price of the opened positions.
+      // The positions whithout a take profit are excluded because it is possible to have one opened at the historical maximum.
+      const numberOfValidOpeningPrices: number[] = asset.positions.filter(p => p.isActive && p.stopLossPrice != -1).map(p => p.openingPrice)
+      
+      if(numberOfValidOpeningPrices.length>0){
+        asset.highestOpeningPrice = Math.max(...numberOfValidOpeningPrices);
+      }else{
+        asset.highestOpeningPrice = asset.price;
+      }
     }
   }
   
@@ -121,6 +128,8 @@ export function openNewPosition(asset: Asset): void {
     isActive: true
   };
   asset.positions.push(newPosition);
+
+  asset.highestOpeningPrice = Math.max(...asset.positions.map(p => p.openingPrice));
 }
 
 // Apply stop loss logic based on price changes

@@ -6,6 +6,7 @@ export interface Asset {
   displayPrice: number
   previousPrice: number
   positions: Position[]
+  highestOpeningPrice: number
   trendReversed: boolean // Store trend reversal flag on asset level
   trendReversalPercentage: number // Store trend reversal percentage on asset level
   reverseTrendTriggerValue?: number // Store the price at which trend reversal was triggered
