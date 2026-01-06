@@ -64,28 +64,35 @@ export function addPositionWhenThresholdCrossed(asset: Asset, upwardThreshold: n
     
     console.log("DEBUG: Price below top percentage:", priceBelowTopPercentage);
     
-    // If we're still within trend reversal percentage, prevent new positions
-    if (priceBelowTopPercentage < trendReversalPercentage) {
-      console.log("DEBUG: Still within trend reversal percentage, preventing new positions");
-      return; // Don't create new positions during trend reversal period
-    }
-    
+
     // The main condition for resetting trend reversal:
     // 1. Current price > old top price (price has recovered above highest opening price)
     // 2. Current price is trend reversal % lower than old top price (price dropped significantly again)
     // 3. Current price > reverse trend trigger value (the condition specified in the task - when current price exceeds the trigger value, reset trend reversal)
     // 4. Price has increased (current price > previous price) - this is the new requirement from the task
     const shouldResetCondition1 = asset.price > asset.highestOpeningPrice;
+    console.log("DEBUG: shouldResetCondition1:", shouldResetCondition1);
     const shouldResetCondition2 = priceBelowTopPercentage >= trendReversalPercentage;
+    console.log("DEBUG: shouldResetCondition2:", shouldResetCondition2);
     const shouldResetCondition3 = (asset.reverseTrendTriggerValue !== undefined && asset.price > asset.reverseTrendTriggerValue);
+    console.log("DEBUG: shouldResetCondition3:", shouldResetCondition3);
     const shouldResetCondition4 = asset.price > asset.previousPrice;
+    console.log("DEBUG: shouldResetCondition4:", shouldResetCondition4);
     
     const shouldReset = shouldResetCondition1 || 
                         shouldResetCondition2 || 
                         shouldResetCondition3 ||
                         shouldResetCondition4;
-    
-    console.log("DEBUG: Should reset trend reversal:", shouldReset);
+                        
+    // If we're still within trend reversal percentage, prevent new positions
+    if (priceBelowTopPercentage < trendReversalPercentage) {
+      console.log("DEBUG: Still within trend reversal percentage, preventing new positions");
+      if(!shouldReset){
+        return; // Don't create new positions during trend reversal period
+      }else{
+        console.log("DEBUG: Should reset trend reversal:", shouldReset);
+      }
+    }
     
     if (shouldReset) {
       console.log("DEBUG: Resetting trend reversal");
