@@ -95,6 +95,16 @@ export function addPositionWhenThresholdCrossed(asset: Asset, upwardThreshold: n
       }else{
         asset.highestOpeningPrice = asset.price;
       }
+      
+      // After trend reversal is reset, check if we should open a new position based on upward threshold
+      // This fixes the issue where after trend reversal is reset, we would create positions 
+      // on every price increase instead of only when upward threshold is reached
+      console.log("DEBUG: After resetting trend reversal, checking for upward threshold");
+      if (uptrend && differencePercentage > upwardThreshold) {
+        console.log("DEBUG: Opening new position due to upward threshold after trend reversal reset");
+        openNewPosition(asset);
+        return;
+      }
     }
   }
   
