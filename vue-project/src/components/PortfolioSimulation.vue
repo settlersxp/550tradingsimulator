@@ -165,7 +165,7 @@ function onPricesChanged(): void {
     <div class="assets-container">
       <AssetCard 
         v-for="asset in portfolio.assets" 
-        :key="asset.name + '-' + Math.random()" 
+        :key="`asset-${Math.random().toString(36).substring(2, 11)}`" 
         :asset="asset"
       />
     </div>
