@@ -70,6 +70,23 @@ export function addPositionWhenThresholdCrossed(asset: Asset, upwardThreshold: n
     asset.trendReversed = true;
     // When trend reversal is triggered, store the current price as the trigger value
     asset.reverseTrendTriggerValue = asset.price;
+
+    if(asset.initialReverseTrendTriggerValue!== undefined && asset.reverseTrendTriggerValue>asset.initialReverseTrendTriggerValue){
+      asset.initialReverseTrendTriggerValue = asset.price;
+    }
+  }
+
+  let tradeRecentlyOpened = false;
+  // if "current asset price" is lower than the "Downward Threshold (%)" of "initialReverseTrendTriggerValue" open a new trade and set "tradeRecentlyOpened" to true
+  if (asset.initialReverseTrendTriggerValue !== undefined && 
+      !uptrend && 
+      asset.price < asset.initialReverseTrendTriggerValue * (1 - downwardThreshold / 100)) {
+    console.log("DEBUG: Opening new position based on initial trigger value and downward threshold");
+    openNewPosition(asset);
+
+    //reset it in case of more downwards
+    asset.initialReverseTrendTriggerValue = asset.price;
+    tradeRecentlyOpened = true;
   }
   
   // If we're in a trend reversal period, check if we should allow new positions
@@ -104,6 +121,20 @@ export function addPositionWhenThresholdCrossed(asset: Asset, upwardThreshold: n
     // unless one of the exceptions is encountered
     if (priceBelowTopPercentage < trendReversalPercentage) {
       console.log("DEBUG: Still within trend reversal percentage, preventing new positions");
+      
+      // However, we should still allow opening positions when downward threshold is met
+      // even during trend reversal period - this fixes the core issue
+      if (!shouldReset && !uptrend && differencePercentage > downwardThreshold) {
+        if(!tradeRecentlyOpened){
+          console.log("DEBUG: Opening new position due to downward threshold during trend reversal");
+          openNewPosition(asset);
+          tradeRecentlyOpened=false;
+        }else{
+          console.log("DEBUG: Position already opened by initialReverseTrendTriggerValue #1");
+        }
+        return;
+      }
+      
       if(!shouldReset){
         return; // Don't create new positions during trend reversal period
       }else{
@@ -131,30 +162,21 @@ export function addPositionWhenThresholdCrossed(asset: Asset, upwardThreshold: n
       // This fixes the issue where after trend reversal is reset, we would create positions 
       // on every price increase instead of only when upward threshold is reached
       console.log("DEBUG: After resetting trend reversal, checking for upward threshold");
+      console.log("DEBUG: uptrend:", uptrend);
+      console.log("DEBUG: differencePercentage:", differencePercentage);
+      console.log("DEBUG: upwardThreshold:", upwardThreshold);
       if (uptrend && differencePercentage > upwardThreshold) {
-        console.log("DEBUG: Opening new position due to upward threshold after trend reversal reset");
-        openNewPosition(asset);
+        if(!tradeRecentlyOpened){
+          console.log("DEBUG: Opening new position due to upward threshold right after trend reversal reset");
+          openNewPosition(asset);
+          tradeRecentlyOpened=false;
+        }else{
+          console.log("DEBUG: Position already opened by initialReverseTrendTriggerValue #2");
+        }
+        
         return;
       }
     }
-  }
-  
-  // Price is going up significantly enough to open a new uptrend position
-  console.log("DEBUG: Checking for upward threshold:", { upwardThreshold, differencePercentage });
-  if(uptrend && differencePercentage > upwardThreshold){
-    console.log("DEBUG: Opening new position due to upward threshold");
-    openNewPosition(asset);
-    return;
-  }
-
-  // Only create new positions if we're dealing with a significant drop (based on downward threshold)
-  // The logic should be: when price drops significantly from the highest opening price, 
-  // we want to add more positions to increase exposure
-  console.log("DEBUG: Checking for downward threshold:", { downwardThreshold, differencePercentage });
-  if (!uptrend && differencePercentage > downwardThreshold) {
-    console.log("DEBUG: Opening new position due to downward threshold");
-    openNewPosition(asset);
-    return;
   }
   
   console.log("DEBUG: No conditions met for opening new position");

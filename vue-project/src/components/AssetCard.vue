@@ -30,6 +30,8 @@ const assetId = props.asset.name
       <span>{{ props.asset.trendReversed ? 'Yes' : 'No' }}</span>
     </div>
     <p>Reverse trend trigger value: {{ props.asset.reverseTrendTriggerValue }}</p>
+    <p>Initial reversal trend trigger value: {{ props.asset.initialReverseTrendTriggerValue }}</p>
+    <p>Initial uptrend value: {{ props.asset.initialUptrendValue }}</p>
     <div class="positions">
       <h4>Positions:</h4>
       <PositionDisplay 

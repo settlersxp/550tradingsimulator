@@ -40,7 +40,7 @@ function generatePortfolio(): void {
       const assetName = generateRandomWord()
       const initialPrice = 100
       
-      const newAsset = {
+      const newAsset: Asset = {
         name: assetName,
         price: initialPrice,
         displayPrice: initialPrice,
@@ -48,7 +48,8 @@ function generatePortfolio(): void {
         positions: [],
         highestOpeningPrice: initialPrice,
         trendReversed: false,
-        trendReversalPercentage: 10
+        trendReversalPercentage: 10,
+        initialReverseTrendTriggerValue: initialPrice
       }
       
       portfolio.assets.push(newAsset)
