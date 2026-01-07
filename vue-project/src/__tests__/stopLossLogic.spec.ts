@@ -66,7 +66,9 @@ describe('Stop Loss Logic Tests', () => {
       previousPrice: 100.00, // Previous price
       positions: [position],
       trendReversed: false,
-      trendReversalPercentage: 0
+      trendReversalPercentage: 0,
+      displayPrice: 0,
+      highestOpeningPrice: 0
     };
     
     // Calculate percentage change (5.56% increase)
@@ -78,7 +80,7 @@ describe('Stop Loss Logic Tests', () => {
     
     // Verify the stop loss price is calculated using correct formula: price * (1 - threshold)
     // 104.56 * (1 - 0.03) = 104.56 * 0.97 = 101.4232
-    expect(asset.positions[0].stopLossPrice).toBeCloseTo(101.4232, 4) // 104.56 * 0.97 = 101.4232
+    expect(asset.positions[0]?.stopLossPrice).toBeCloseTo(101.4232, 4) // 104.56 * 0.97 = 101.4232
   })
 
   // Position should remain active when stop loss is -1 and current price < opening price
@@ -98,7 +100,9 @@ describe('Stop Loss Logic Tests', () => {
       previousPrice: 100.00, // Previous price
       positions: [position],
       trendReversed: false,
-      trendReversalPercentage: 0
+      trendReversalPercentage: 0,
+      displayPrice: 0,
+      highestOpeningPrice: 0
     };
     
     // Calculate percentage change (5% decrease)
@@ -111,7 +115,7 @@ describe('Stop Loss Logic Tests', () => {
     // Verify the position remains active because:
     // 1. stopLossPrice is -1 (uninitialized) 
     // 2. current price (95.00) < opening price (100.00)
-    expect(asset.positions[0].isActive).toBe(true)
+    expect(asset.positions[0]?.isActive).toBe(true)
   })
   
   // Stop loss should not be calculated for closed positions
@@ -137,7 +141,9 @@ describe('Stop Loss Logic Tests', () => {
       previousPrice: 100.00, // Previous price
       positions: [activePosition, closedPosition],
       trendReversed: false,
-      trendReversalPercentage: 0
+      trendReversalPercentage: 0,
+      displayPrice: 0,
+      highestOpeningPrice: 0
     };
     
     // Calculate percentage change (5% increase)
@@ -145,16 +151,26 @@ describe('Stop Loss Logic Tests', () => {
     expect(changePercentage).toBeCloseTo(5.00, 2)
     
     // Store original stop loss prices for verification
-    const originalActiveStopLoss = asset.positions[0].stopLossPrice;
-    const originalClosedStopLoss = asset.positions[1].stopLossPrice;
+    const originalActiveStopLoss = asset.positions[0]?.stopLossPrice;
+    const originalClosedStopLoss = asset.positions[1]?.stopLossPrice;
     
     // Apply stop loss logic with 3% threshold
     applyStopLossLogic(asset, changePercentage, 3)
     
     // Verify that the active position's stop loss was updated (since price increased)
-    expect(asset.positions[0].stopLossPrice).toBeGreaterThan(originalActiveStopLoss);
+    if (originalActiveStopLoss !== undefined) {
+      expect(asset.positions[0]?.stopLossPrice).toBeGreaterThan(originalActiveStopLoss);
+    } else {
+      // If original value is missing, we should fail the test
+      throw new Error("Original active stop loss value is undefined - this indicates a problem with test setup");
+    }
     
     // Verify that the closed position's stop loss was NOT updated (should remain unchanged)
-    expect(asset.positions[1].stopLossPrice).toBe(originalClosedStopLoss);
+    if (originalClosedStopLoss !== undefined) {
+      expect(asset.positions[1]?.stopLossPrice).toBe(originalClosedStopLoss);
+    } else {
+      // If original value is missing, we should fail the test
+      throw new Error("Original closed stop loss value is undefined - this indicates a problem with test setup");
+    }
   })
 })

@@ -16,11 +16,12 @@ describe('Trend Reversal Protection Tests', () => {
         { openingPrice: 100.00, quantity: 1, stopLossPrice: -1, isActive: true } as Position
       ],
       trendReversed: false,
-      trendReversalPercentage: 10
+      trendReversalPercentage: 10,
+      highestOpeningPrice: 0
     }
     
     // Initially, no trend reversal should be active
-    expect(asset.positions[0].isActive).toBe(true)
+    expect(asset.positions[0]?.isActive).toBe(true)
     
     // Call the function that should detect trend reversal
     addPositionWhenThresholdCrossed(asset, 5, 5) // upwardThreshold = 5%, downwardThreshold = 5%
@@ -41,7 +42,8 @@ describe('Trend Reversal Protection Tests', () => {
         { openingPrice: 100.00, quantity: 1, stopLossPrice: -1, isActive: true } as Position
       ],
       trendReversed: false,
-      trendReversalPercentage: 10
+      trendReversalPercentage: 10,
+      highestOpeningPrice: 0
     }
     
     // Store initial position count
@@ -65,7 +67,9 @@ describe('Trend Reversal Protection Tests', () => {
         { openingPrice: 100.00, quantity: 1, stopLossPrice: -1, isActive: true } as Position
       ],
       trendReversalPercentage: 10, // Set default value
-      trendReversed: true
+      trendReversed: true,
+      displayPrice: 0,
+      highestOpeningPrice: 0
     }
     
     // Call function to potentially reset trend reversal flag
@@ -87,8 +91,9 @@ describe('Trend Reversal Protection Tests', () => {
         { openingPrice: 100.00, quantity: 1, stopLossPrice: -1, isActive: true } as Position
       ],
       trendReversalPercentage: 10, // Set default value
-      trendReversed:true,
-      reverseTrendTriggerValue: 100
+      trendReversed: true,
+      reverseTrendTriggerValue: 100,
+      highestOpeningPrice: 0
     }
     
     // Call function to see how it handles the default 10% threshold.
@@ -172,7 +177,8 @@ describe('Trend Reversal Protection Tests', () => {
       previousPrice: 100.00, // Previous price 
       positions: [],
       trendReversed: true,
-      trendReversalPercentage: 10
+      trendReversalPercentage: 10,
+      highestOpeningPrice: 0
     }
 
     const positions: Position[] = [

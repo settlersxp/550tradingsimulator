@@ -14,7 +14,8 @@ describe('Portfolio Logic Functions', () => {
       previousPrice: 95, 
       positions: [],
       trendReversed: false,
-      trendReversalPercentage: 10
+      trendReversalPercentage: 10,
+      highestOpeningPrice: 100
     }
     
     // Calculate percentage change
@@ -47,12 +48,16 @@ describe('Portfolio Logic Functions', () => {
 
   it('should handle edge cases for price calculations', () => {
     // Test with zero previous price (should not divide by zero)
-    const asset = {
+    const asset: Asset = {
       name: 'TestAsset',
       price: 100,
       previousPrice: 0,
-      positions: []
-    } as Asset
+      positions: [],
+      displayPrice: 0,
+      highestOpeningPrice: 0,
+      trendReversed: false,
+      trendReversalPercentage: 0
+    }
     
     // This would cause division by zero in the original code
     // But since we're just testing logic, we can verify the calculation approach
@@ -163,7 +168,10 @@ describe('Portfolio Logic Functions', () => {
       previousPrice: 100.00,
       positions: [
         { openingPrice: 100.00, quantity: 1, stopLossPrice: 105.00, isActive: true }
-      ]
+      ],
+      highestOpeningPrice: 100.00,
+      trendReversed: false,
+      trendReversalPercentage: 10
     } as Asset;
     
     // Calculate the percentage change
@@ -181,13 +189,13 @@ describe('Portfolio Logic Functions', () => {
     
     // The newly created position should be active
     const newPosition = asset.positions[1];
-    expect(newPosition.isActive).toBe(true);
+    expect(newPosition?.isActive).toBe(true);
     
     // The new position should have correct values
-    expect(newPosition.openingPrice).toBe(108.11);
-    expect(newPosition.quantity).toBe(1);
+    expect(newPosition?.openingPrice).toBe(108.11);
+    expect(newPosition?.quantity).toBe(1);
     // With our new implementation, stopLossPrice should be -1 for new positions (not calculated as 5% above opening price)
-    expect(newPosition.stopLossPrice).toBe(-1);
+    expect(newPosition?.stopLossPrice).toBe(-1);
   })
 
   // Test that newly created positions don't have their stop loss set when price increases
@@ -200,7 +208,11 @@ describe('Portfolio Logic Functions', () => {
       positions: [
         { openingPrice: 100.00, quantity: 1, stopLossPrice: 105.00, isActive: true }, // Existing position
         { openingPrice: 107.88, quantity: 1, stopLossPrice: -1, isActive: true } // Newly created position with same price
-      ]
+      ],
+      highestOpeningPrice: 100.00,
+      trendReversed: false,
+      trendReversalPercentage: 10,
+      displayPrice: 0
     }
     
     // Calculate percentage change (7.88% increase)
@@ -211,10 +223,10 @@ describe('Portfolio Logic Functions', () => {
     applyStopLossLogic(asset, changePercentage, 5);
     
     // Verify that existing position stop loss was updated
-    expect(asset.positions[0].stopLossPrice).toBe(105.00);
+    expect(asset.positions[0]?.stopLossPrice).toBe(105.00);
     
     // Verify that newly created position stop loss remains -1 (not updated)
-    expect(asset.positions[1].stopLossPrice).toBe(-1);
+    expect(asset.positions[1]?.stopLossPrice).toBe(-1);
   })
 
   // Test for the specific scenario: only positions opened at higher prices should be closed when price drops
@@ -234,7 +246,10 @@ describe('Portfolio Logic Functions', () => {
         { openingPrice: 100.00, quantity: 1, stopLossPrice: 105.00, isActive: true }, // Active position opened at $100
         { openingPrice: 105.39, quantity: 1, stopLossPrice: 110.66, isActive: true }, // Active position opened at $105.39  
         { openingPrice: 99.33, quantity: 1, stopLossPrice: 104.29, isActive: true }  // Active position opened at $99.33
-      ]
+      ],
+      highestOpeningPrice: 105.39,
+      trendReversed: false,
+      trendReversalPercentage: 10
     } as Asset;
     
     // Calculate the percentage change
@@ -247,10 +262,10 @@ describe('Portfolio Logic Functions', () => {
     applyStopLossLogic(asset, changePercentage, 5);
     
     // - Position opened at $100.00 should be closed (higher than current price $99.33)
-    expect(asset.positions[0].isActive).toBe(false); 
+    expect(asset.positions[0]?.isActive).toBe(false); 
     // - Position opened at $105.39 should be closed (higher than current price $99.33)
-    expect(asset.positions[1].isActive).toBe(false);  
+    expect(asset.positions[1]?.isActive).toBe(false);  
     // - Position opened at $99.33 should remain active (same as current price)
-    expect(asset.positions[2].isActive).toBe(true);
+    expect(asset.positions[2]?.isActive).toBe(true);
   })
 })

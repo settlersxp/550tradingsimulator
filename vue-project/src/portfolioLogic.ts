@@ -14,6 +14,22 @@ export function generateRandomWord(): string {
   return wordList[randomIndex] || ""
 }
 
+/**
+ * Adds a new position to an asset when price thresholds are crossed, with sophisticated trend reversal protection.
+ * 
+ * The function checks for three conditions to determine when to add a new position:
+ * 1. When price increases significantly from the highest opening price (upward threshold)
+ * 2. When price decreases significantly from the highest opening price (downward threshold)
+ * 3. When price recovers above the highest opening price after a trend reversal
+ * 
+ * The trend reversal protection mechanism prevents new positions during a trend reversal period
+ * unless specific reset conditions are met, including price recovery above the highest opening price,
+ * significant price drop, price exceeding the reverse trend trigger value, or price increase.
+ * 
+ * @param asset - The asset to which a new position should be added
+ * @param upwardThreshold - The percentage threshold for upward price movement
+ * @param downwardThreshold - The percentage threshold for downward price movement
+ */
 // Add a new position when price thresholds are crossed
 export function addPositionWhenThresholdCrossed(asset: Asset, upwardThreshold: number, downwardThreshold: number): void {
   console.log("DEBUG: addPositionWhenThresholdCrossed called with:", { asset: asset.name, upwardThreshold, downwardThreshold });
@@ -84,7 +100,8 @@ export function addPositionWhenThresholdCrossed(asset: Asset, upwardThreshold: n
                         shouldResetCondition3 ||
                         shouldResetCondition4;
                         
-    // If we're still within trend reversal percentage, prevent new positions
+    // If we're still within trend reversal percentage, prevent new positions 
+    // unless one of the exceptions is encountered
     if (priceBelowTopPercentage < trendReversalPercentage) {
       console.log("DEBUG: Still within trend reversal percentage, preventing new positions");
       if(!shouldReset){
