@@ -10,6 +10,9 @@ import {
   openNewPosition
  } from '../portfolioLogic'
 
+// Import the ActionHistory for debugging purposes
+import { ActionHistory } from '../history/ActionHistory'
+
 // Portfolio data structure
 import type { Portfolio } from '../types/portfolio'
 
@@ -152,6 +155,16 @@ function handleAssetCountChange(newCount: number): void {
     numberOfAssets.value = newCount;
   }
 }
+
+// Function to export action history for debugging
+function exportHistory(): void {
+  const history = ActionHistory.getInstance();
+  console.log("Action History:", history.exportAsJson());
+  // Also copy to clipboard for easy paste
+  navigator.clipboard.writeText(history.exportAsText()).then(() => {
+    console.log("History copied to clipboard!");
+  });
+}
 </script>
 
 <template>
@@ -169,6 +182,7 @@ function handleAssetCountChange(newCount: number): void {
       <h2>Closed Positions: ${{ getClosedPositionsValue().toFixed(2) }}</h2>
       <h2>Active Positions: ${{ getActivePositionsValue().toFixed(2) }}</h2>
       <h2>Total: ${{ getTotalValue().toFixed(2) }}</h2>
+      <button @click="exportHistory">Export History</button>
     </div>
     
     <div class="assets-container">

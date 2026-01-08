@@ -1,4 +1,5 @@
 import type { Asset } from './types/asset'
+import { ActionHistory } from './history/ActionHistory'
 
 // Word list for generating random asset names
 const wordList = [
@@ -32,16 +33,31 @@ export function generateRandomWord(): string {
  */
 // Add a new position when price thresholds are crossed
 export function addPositionWhenThresholdCrossed(asset: Asset, upwardThreshold: number, downwardThreshold: number): void {
-  console.log("DEBUG: addPositionWhenThresholdCrossed called with:", { asset: asset.name, upwardThreshold, downwardThreshold });
+  const history = ActionHistory.getInstance();
+  history.recordAction('addPositionWhenThresholdCrossed', asset.name, { 
+    assetName: asset.name, 
+    upwardThreshold, 
+    downwardThreshold,
+    price: asset.price,
+    previousPrice: asset.previousPrice,
+    positionsCount: asset.positions.length
+  });
   
   const uptrend = asset.price > asset.previousPrice;
   
-  console.log("DEBUG: Asset:", asset);
-  console.log("DEBUG: Uptrend:", uptrend);
+  history.recordAction('addPositionWhenThresholdCrossed', asset.name, { 
+    assetName: asset.name, 
+    message: 'Uptrend check',
+    uptrend,
+    price: asset.price,
+    previousPrice: asset.previousPrice
+  });
   
   if (asset.positions.length === 0) {
     // If no positions exist at all, we can create a new one
-    console.log("DEBUG: No existing positions, opening new position");
+    history.recordAction('addPositionWhenThresholdCrossed', asset.name, { 
+      message: 'No existing positions, opening new position'
+    });
     openNewPosition(asset);
     return;
   }
@@ -50,23 +66,33 @@ export function addPositionWhenThresholdCrossed(asset: Asset, upwardThreshold: n
   // This represents how much the price has dropped from the highest position
   const differencePercentage = Math.abs(((asset.highestOpeningPrice - asset.price) / asset.highestOpeningPrice) * 100);
 
-  console.log("DEBUG: Highest opening price:", asset.highestOpeningPrice);
-  console.log("DEBUG: Difference percentage:", differencePercentage);
+  history.recordAction('addPositionWhenThresholdCrossed', asset.name, { 
+    message: 'Highest opening price calculation',
+    highestOpeningPrice: asset.highestOpeningPrice,
+    differencePercentage
+  });
   
   if(differencePercentage == 0){
-    console.log('DEBUG: Difference is 0, returning early');
+    history.recordAction('addPositionWhenThresholdCrossed', asset.name, { 
+      message: 'Difference is 0, returning early'
+    });
     return;
   }
   
   // Check for trend reversal protection 
   const trendReversalPercentage = asset.trendReversalPercentage; // Use the asset's trendReversalPercentage (which is required)
   
-  console.log("DEBUG: Trend reversal percentage:", trendReversalPercentage);
-  console.log("DEBUG: Asset trend reversed:", asset.trendReversed);
+  history.recordAction('addPositionWhenThresholdCrossed', asset.name, { 
+    message: 'Trend reversal check',
+    trendReversalPercentage,
+    trendReversed: asset.trendReversed
+  });
   
   // Activate trend reversal flag when price drops
   if (!asset.trendReversed && asset.price < asset.previousPrice) {
-    console.log("DEBUG: Trend reversal triggered");
+    history.recordAction('addPositionWhenThresholdCrossed', asset.name, { 
+      message: 'Trend reversal triggered'
+    });
     asset.trendReversed = true;
     // When trend reversal is triggered, store the current price as the trigger value
     asset.reverseTrendTriggerValue = asset.price;
@@ -81,7 +107,9 @@ export function addPositionWhenThresholdCrossed(asset: Asset, upwardThreshold: n
   if (asset.initialReverseTrendTriggerValue !== undefined && 
       !uptrend && 
       asset.price < asset.initialReverseTrendTriggerValue * (1 - downwardThreshold / 100)) {
-    console.log("DEBUG: Opening new position based on initial trigger value and downward threshold");
+    history.recordAction('addPositionWhenThresholdCrossed', asset.name, { 
+      message: 'Opening new position based on initial trigger value and downward threshold'
+    });
     openNewPosition(asset);
 
     //reset it in case of more downwards
@@ -91,11 +119,16 @@ export function addPositionWhenThresholdCrossed(asset: Asset, upwardThreshold: n
   
   // If we're in a trend reversal period, check if we should allow new positions
   if (asset.trendReversed) {
-    console.log("DEBUG: In trend reversal period");
+    history.recordAction('addPositionWhenThresholdCrossed', asset.name, { 
+      message: 'In trend reversal period'
+    });
     // Calculate how much current price is below the highest opening price
     const priceBelowTopPercentage = ((asset.highestOpeningPrice - asset.price) / asset.highestOpeningPrice) * 100;
     
-    console.log("DEBUG: Price below top percentage:", priceBelowTopPercentage);
+    history.recordAction('addPositionWhenThresholdCrossed', asset.name, { 
+      message: 'Price below top percentage',
+      priceBelowTopPercentage
+    });
     
 
     // The main condition for resetting trend reversal:
@@ -104,13 +137,25 @@ export function addPositionWhenThresholdCrossed(asset: Asset, upwardThreshold: n
     // 3. Current price > reverse trend trigger value (the condition specified in the task - when current price exceeds the trigger value, reset trend reversal)
     // 4. Price has increased (current price > previous price) - this is the new requirement from the task
     const shouldResetCondition1 = asset.price > asset.highestOpeningPrice;
-    console.log("DEBUG: shouldResetCondition1:", shouldResetCondition1);
+    history.recordAction('addPositionWhenThresholdCrossed', asset.name, { 
+      message: 'shouldResetCondition1 check',
+      shouldResetCondition1
+    });
     const shouldResetCondition2 = priceBelowTopPercentage >= trendReversalPercentage;
-    console.log("DEBUG: shouldResetCondition2:", shouldResetCondition2);
+    history.recordAction('addPositionWhenThresholdCrossed', asset.name, { 
+      message: 'shouldResetCondition2 check',
+      shouldResetCondition2
+    });
     const shouldResetCondition3 = (asset.reverseTrendTriggerValue !== undefined && asset.price > asset.reverseTrendTriggerValue);
-    console.log("DEBUG: shouldResetCondition3:", shouldResetCondition3);
+    history.recordAction('addPositionWhenThresholdCrossed', asset.name, { 
+      message: 'shouldResetCondition3 check',
+      shouldResetCondition3
+    });
     const shouldResetCondition4 = asset.price > asset.previousPrice;
-    console.log("DEBUG: shouldResetCondition4:", shouldResetCondition4);
+    history.recordAction('addPositionWhenThresholdCrossed', asset.name, { 
+      message: 'shouldResetCondition4 check',
+      shouldResetCondition4
+    });
     
     const shouldReset = shouldResetCondition1 || 
                         shouldResetCondition2 || 
@@ -120,17 +165,23 @@ export function addPositionWhenThresholdCrossed(asset: Asset, upwardThreshold: n
     // If we're still within trend reversal percentage, prevent new positions 
     // unless one of the exceptions is encountered
     if (priceBelowTopPercentage < trendReversalPercentage) {
-      console.log("DEBUG: Still within trend reversal percentage, preventing new positions");
+      history.recordAction('addPositionWhenThresholdCrossed', asset.name, { 
+        message: 'Still within trend reversal percentage, preventing new positions'
+      });
       
       // However, we should still allow opening positions when downward threshold is met
       // even during trend reversal period - this fixes the core issue
       if (!shouldReset && !uptrend && differencePercentage > downwardThreshold) {
         if(!tradeRecentlyOpened){
-          console.log("DEBUG: Opening new position due to downward threshold during trend reversal");
+          history.recordAction('addPositionWhenThresholdCrossed', asset.name, { 
+            message: 'Opening new position due to downward threshold during trend reversal'
+          });
           openNewPosition(asset);
           tradeRecentlyOpened=false;
         }else{
-          console.log("DEBUG: Position already opened by initialReverseTrendTriggerValue #1");
+          history.recordAction('addPositionWhenThresholdCrossed', asset.name, { 
+            message: 'Position already opened by initialReverseTrendTriggerValue #1'
+          });
         }
         return;
       }
@@ -138,12 +189,17 @@ export function addPositionWhenThresholdCrossed(asset: Asset, upwardThreshold: n
       if(!shouldReset){
         return; // Don't create new positions during trend reversal period
       }else{
-        console.log("DEBUG: Should reset trend reversal:", shouldReset);
+        history.recordAction('addPositionWhenThresholdCrossed', asset.name, { 
+          message: 'Should reset trend reversal',
+          shouldReset
+        });
       }
     }
     
     if (shouldReset) {
-      console.log("DEBUG: Resetting trend reversal");
+      history.recordAction('addPositionWhenThresholdCrossed', asset.name, { 
+        message: 'Resetting trend reversal'
+      });
       asset.trendReversed = false;
       // Reset the reverse trend trigger value when trend reversal is invalidated
       asset.reverseTrendTriggerValue = undefined;
@@ -161,17 +217,26 @@ export function addPositionWhenThresholdCrossed(asset: Asset, upwardThreshold: n
       // After trend reversal is reset, check if we should open a new position based on upward threshold
       // This fixes the issue where after trend reversal is reset, we would create positions 
       // on every price increase instead of only when upward threshold is reached
-      console.log("DEBUG: After resetting trend reversal, checking for upward threshold");
-      console.log("DEBUG: uptrend:", uptrend);
-      console.log("DEBUG: differencePercentage:", differencePercentage);
-      console.log("DEBUG: upwardThreshold:", upwardThreshold);
+      history.recordAction('addPositionWhenThresholdCrossed', asset.name, { 
+        message: 'After resetting trend reversal, checking for upward threshold'
+      });
+      history.recordAction('addPositionWhenThresholdCrossed', asset.name, { 
+        message: 'Uptrend check',
+        uptrend,
+        differencePercentage,
+        upwardThreshold
+      });
       if (uptrend && differencePercentage > upwardThreshold) {
         if(!tradeRecentlyOpened){
-          console.log("DEBUG: Opening new position due to upward threshold right after trend reversal reset");
+          history.recordAction('addPositionWhenThresholdCrossed', asset.name, { 
+            message: 'Opening new position due to upward threshold right after trend reversal reset'
+          });
           openNewPosition(asset);
           tradeRecentlyOpened=false;
         }else{
-          console.log("DEBUG: Position already opened by initialReverseTrendTriggerValue #2");
+          history.recordAction('addPositionWhenThresholdCrossed', asset.name, { 
+            message: 'Position already opened by initialReverseTrendTriggerValue #2'
+          });
         }
         
         return;
@@ -179,11 +244,20 @@ export function addPositionWhenThresholdCrossed(asset: Asset, upwardThreshold: n
     }
   }
   
-  console.log("DEBUG: No conditions met for opening new position");
+  history.recordAction('addPositionWhenThresholdCrossed', asset.name, { 
+    message: 'No conditions met for opening new position'
+  });
 }
 
 // Create a new position when thresholds are crossed
 export function openNewPosition(asset: Asset): void {
+  const history = ActionHistory.getInstance();
+  history.recordAction('openNewPosition', asset.name, { 
+    assetName: asset.name,
+    price: asset.price,
+    positionsCountBefore: asset.positions.length
+  });
+  
   const newPosition = {
     openingPrice: asset.price,
     quantity: 1,
@@ -193,12 +267,24 @@ export function openNewPosition(asset: Asset): void {
   asset.positions.push(newPosition);
 
   asset.highestOpeningPrice = Math.max(...asset.positions.map(p => p.openingPrice));
+  
+  history.recordAction('openNewPosition', asset.name, { 
+    assetName: asset.name,
+    positionsCountAfter: asset.positions.length,
+    highestOpeningPrice: asset.highestOpeningPrice
+  });
 }
 
 // Apply stop loss logic based on price changes
 export function applyStopLossLogic(asset: Asset, changePercentage: number, stopLossThreshold: number): void {
-  // DEBUG: Uncomment to enable debug logging
-  // console.log("DEBUG: applyStopLossLogic called with:", { asset: asset.name, changePercentage, stopLossThreshold });
+  const history = ActionHistory.getInstance();
+  history.recordAction('applyStopLossLogic', asset.name, { 
+    assetName: asset.name, 
+    changePercentage, 
+    stopLossThreshold,
+    price: asset.price,
+    previousPrice: asset.previousPrice
+  });
   
   // Define clear states for the logic flow
   const isPriceIncreasing = changePercentage > 0;
@@ -207,26 +293,33 @@ export function applyStopLossLogic(asset: Asset, changePercentage: number, stopL
   
   // Handle unchanged price case immediately
   if (isPriceUnchanged) {
-    // DEBUG: Uncomment to enable debug logging
-    // console.log("DEBUG: Price unchanged, no action needed");
+    history.recordAction('applyStopLossLogic', asset.name, { 
+      message: 'Price unchanged, no action needed'
+    });
     return; // No action needed when price doesn't change
   }
   
   // Process based on price movement direction
   if (isPriceIncreasing) {
-    // DEBUG: Uncomment to enable debug logging
-    // console.log("DEBUG: Processing price increase");
+    history.recordAction('applyStopLossLogic', asset.name, { 
+      message: 'Processing price increase'
+    });
     processStopLossIncrease(asset, stopLossThreshold);
   } else if (isPriceDecreasing) {
-    // DEBUG: Uncomment to enable debug logging
-    // console.log("DEBUG: Processing price decrease");
+    history.recordAction('applyStopLossLogic', asset.name, { 
+      message: 'Processing price decrease'
+    });
     processStopLossDecrease(asset);
   }
 }
 
 function processStopLossIncrease(asset: Asset, stopLossThreshold: number): void {
-  // DEBUG: Uncomment to enable debug logging
-  // console.log("DEBUG: Processing stop loss increase for asset:", asset.name);
+  const history = ActionHistory.getInstance();
+  history.recordAction('processStopLossIncrease', asset.name, { 
+    message: 'Processing stop loss increase',
+    price: asset.price,
+    stopLossThreshold
+  });
   
   // Loop through all positions and update stop loss for active ones
   asset.positions.forEach(position => {
@@ -234,18 +327,20 @@ function processStopLossIncrease(asset: Asset, stopLossThreshold: number): void 
     const isPositionActive = position.isActive;
     const isPositionNewlyOpened = asset.price === position.openingPrice;
     
-    // DEBUG: Uncomment to enable debug logging
-    // console.log("DEBUG: Processing position:", { 
-    //   isActive: isPositionActive, 
-    //   isNewlyOpened: isPositionNewlyOpened,
-    //   openingPrice: position.openingPrice,
-    //   currentPrice: asset.price
-    // });
+    history.recordAction('processStopLossIncrease', asset.name, { 
+      message: 'Processing position',
+      positionId: `${position.openingPrice}-${position.quantity}`,
+      isActive: isPositionActive,
+      isNewlyOpened: isPositionNewlyOpened,
+      openingPrice: position.openingPrice,
+      currentPrice: asset.price
+    });
     
     // Skip processing if position is inactive or newly opened
     if (!isPositionActive || isPositionNewlyOpened) {
-      // DEBUG: Uncomment to enable debug logging
-      // console.log("DEBUG: Skipping position processing - inactive or newly opened");
+      history.recordAction('processStopLossIncrease', asset.name, { 
+        message: 'Skipping position processing - inactive or newly opened'
+      });
       return;
     }
     
@@ -253,28 +348,31 @@ function processStopLossIncrease(asset: Asset, stopLossThreshold: number): void 
     const stopLossMultiplier = 1 - (stopLossThreshold / 100);
     const calculatedStopLoss = asset.price * stopLossMultiplier;
     
-    // DEBUG: Uncomment to enable debug logging
-    // console.log("DEBUG: Calculated stop loss:", { 
-    //   calculatedStopLoss, 
-    //   existingStopLoss: position.stopLossPrice,
-    //   openingPrice: position.openingPrice
-    // });
+    history.recordAction('processStopLossIncrease', asset.name, { 
+      message: 'Calculated stop loss',
+      calculatedStopLoss, 
+      existingStopLoss: position.stopLossPrice,
+      openingPrice: position.openingPrice
+    });
     
     // Update stop loss only when beneficial
     const isBeneficialToUpdate = calculatedStopLoss >= position.openingPrice;
     if (isBeneficialToUpdate) {
       position.stopLossPrice = Math.max(calculatedStopLoss, position.stopLossPrice);
-      // DEBUG: Uncomment to enable debug logging
-      // console.log("DEBUG: Updated stop loss for position:", { 
-      //   newStopLoss: position.stopLossPrice 
-      // });
+      history.recordAction('processStopLossIncrease', asset.name, { 
+        message: 'Updated stop loss for position',
+        newStopLoss: position.stopLossPrice 
+      });
     }
   });
 }
 
 function processStopLossDecrease(asset: Asset): void {
-  // DEBUG: Uncomment to enable debug logging
-  // console.log("DEBUG: Processing stop loss decrease for asset:", asset.name);
+  const history = ActionHistory.getInstance();
+  history.recordAction('processStopLossDecrease', asset.name, { 
+    message: 'Processing stop loss decrease',
+    price: asset.price
+  });
   
   // Loop through all positions to check for closure
   asset.positions.forEach(position => {
@@ -284,45 +382,49 @@ function processStopLossDecrease(asset: Asset): void {
     const isUninitializedStopLoss = position.stopLossPrice === -1;
     const isPriceBelowOpening = asset.price < position.openingPrice;
     
-    // DEBUG: Uncomment to enable debug logging
-    // console.log("DEBUG: Checking position for closure:", { 
-    //   isActive: isPositionActive,
-    //   belowStopLoss: isBelowStopLoss,
-    //   uninitializedStopLoss: isUninitializedStopLoss,
-    //   priceBelowOpening: isPriceBelowOpening,
-    //   currentPrice: asset.price,
-    //   stopLossPrice: position.stopLossPrice,
-    //   openingPrice: position.openingPrice
-    // });
+    history.recordAction('processStopLossDecrease', asset.name, { 
+      message: 'Checking position for closure',
+      positionId: `${position.openingPrice}-${position.quantity}`,
+      isActive: isPositionActive,
+      belowStopLoss: isBelowStopLoss,
+      uninitializedStopLoss: isUninitializedStopLoss,
+      priceBelowOpening: isPriceBelowOpening,
+      currentPrice: asset.price,
+      stopLossPrice: position.stopLossPrice,
+      openingPrice: position.openingPrice
+    });
     
     // Skip processing if position is inactive
     if (!isPositionActive) {
-      // DEBUG: Uncomment to enable debug logging
-      // console.log("DEBUG: Skipping closure check - position inactive");
+      history.recordAction('processStopLossDecrease', asset.name, { 
+        message: 'Skipping closure check - position inactive'
+      });
       return;
     }
     
     // Skip closing if price hasn't dropped below stop loss
     if (!isBelowStopLoss) {
-      // DEBUG: Uncomment to enable debug logging
-      // console.log("DEBUG: Skipping closure - not below stop loss");
+      history.recordAction('processStopLossDecrease', asset.name, { 
+        message: 'Skipping closure - not below stop loss'
+      });
       return;
     }
     
     // Special case: don't close if stop loss is uninitialized and price is below opening
     if (isUninitializedStopLoss && isPriceBelowOpening) {
-      // DEBUG: Uncomment to enable debug logging
-      // console.log("DEBUG: Skipping closure - uninitialized stop loss with price below opening");
+      history.recordAction('processStopLossDecrease', asset.name, { 
+        message: 'Skipping closure - uninitialized stop loss with price below opening'
+      });
       return;
     }
     
     // Close the position since it dropped below stop loss
     position.isActive = false;
-    // DEBUG: Uncomment to enable debug logging
-    // console.log("DEBUG: Closed position:", { 
-    //   closingPrice: asset.price,
-    //   stopLossPrice: position.stopLossPrice
-    // });
+    history.recordAction('processStopLossDecrease', asset.name, { 
+      message: 'Closed position',
+      closingPrice: asset.price,
+      stopLossPrice: position.stopLossPrice
+    });
   });
 }
 

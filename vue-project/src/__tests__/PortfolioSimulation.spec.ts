@@ -19,9 +19,9 @@ describe('PortfolioSimulation', () => {
     // Check that we have portfolio info
     expect(wrapper.find('.portfolio-info').exists()).toBe(true)
     
-    // Check for buttons - there should be 4 buttons: +, -, Generate, Reinitialize
+    // Check for buttons - there should be 5 buttons: +, -, Generate, Reinitialize, Export History
     const buttons = wrapper.findAll('button')
-    expect(buttons.length).toBe(4)
+    expect(buttons.length).toBe(5)
     
     // Verify the button texts are correct
     const buttonTexts = buttons.map(btn => btn.text())
@@ -29,6 +29,7 @@ describe('PortfolioSimulation', () => {
     expect(buttonTexts).toContain('-')
     expect(buttonTexts).toContain('Generate')
     expect(buttonTexts).toContain('Reinitialize')
+    expect(buttonTexts).toContain('Export History')
   })
   
   it('initializes with correct default values', () => {
