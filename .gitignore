@@ -1,1 +1,5 @@
 node_modules
+automation/*.md
+automation/*.html
+automation/*.json
+simulation/*.json

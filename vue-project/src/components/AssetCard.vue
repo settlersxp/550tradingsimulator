@@ -6,12 +6,20 @@ const props = defineProps<{
   asset: Asset
 }>()
 
+// Emit event to show detail view
+const emit = defineEmits(['show-detail'])
+
 // Generate a unique identifier for this asset card internally
 const assetId = props.asset.name
+
+// Method to handle click and show detail
+function handleShowDetail(): void {
+  emit('show-detail', props.asset)
+}
 </script>
 
 <template>
-  <div class="asset-card" v-if="props.asset">
+  <div class="asset-card" v-if="props.asset" @click="handleShowDetail">
     <h3>{{ props.asset.name }}</h3>
     <p>Current Price: ${{ props.asset.price.toFixed(2) }}</p>
     <p>Previous Price: ${{ props.asset.displayPrice.toFixed(2) }}</p>
@@ -26,7 +34,7 @@ const assetId = props.asset.name
       />
     </div>
     <div class="trend-reversed">
-      <label :for="'trendReversed-' + assetId">Trend Reversed:</label>
+      <label :for="'trendReversal-' + assetId">Trend Reversed:</label>
       <span>{{ props.asset.trendReversed ? 'Yes' : 'No' }}</span>
     </div>
     <p>Reverse trend trigger value: {{ props.asset.reverseTrendTriggerValue }}</p>

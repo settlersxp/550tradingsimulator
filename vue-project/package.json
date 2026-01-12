@@ -15,7 +15,9 @@
     "build-only": "vite build",
     "type-check": "vue-tsc --build",
     "lint": "eslint . --fix --cache",
-    "format": "prettier --write --experimental-cli src/"
+    "format": "prettier --write --experimental-cli src/",
+    "automate": "node ../automation/automated-analysis.js",
+    "automate-simulations": "node ../automation/automated-simulation-runner.js"
   },
   "dependencies": {
     "vue": "^3.5.26",

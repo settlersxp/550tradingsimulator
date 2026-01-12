@@ -1,33 +1,24 @@
-# Sprint Planning Validation Checklist
+# Sprint Planning Checklist
 
-## Core Validation
+## Validation Checks
 
-### Complete Coverage Check
+- [x] Every epic found in epic*.md files appears in sprint-status.yaml
+- [x] Every story found in epic*.md files appears in sprint-status.yaml
+- [x] Every epic has a corresponding retrospective entry
+- [x] No items in sprint-status.yaml that don't exist in epic files
+- [x] All status values are legal (match state machine definitions)
+- [x] File is valid YAML syntax
 
-- [ ] Every epic found in epic\*.md files appears in sprint-status.yaml
-- [ ] Every story found in epic\*.md files appears in sprint-status.yaml
-- [ ] Every epic has a corresponding retrospective entry
-- [ ] No items in sprint-status.yaml that don't exist in epic files
+## Sprint Status Summary
 
-### Parsing Verification
+- **Total Epics:** 3
+- **Total Stories:** 6
+- **Epics In Progress:** 0
+- **Stories Completed:** 0
 
-Compare epic files against generated sprint-status.yaml:
+## Next Steps
 
-```
-Epic Files Contains:                Sprint Status Contains:
-✓ Epic 1                            ✓ epic-1: [status]
-  ✓ Story 1.1: User Auth              ✓ 1-1-user-auth: [status]
-  ✓ Story 1.2: Account Mgmt           ✓ 1-2-account-mgmt: [status]
-  ✓ Story 1.3: Plant Naming           ✓ 1-3-plant-naming: [status]
-                                      ✓ epic-1-retrospective: [status]
-✓ Epic 2                            ✓ epic-2: [status]
-  ✓ Story 2.1: Personality Model      ✓ 2-1-personality-model: [status]
-  ✓ Story 2.2: Chat Interface         ✓ 2-2-chat-interface: [status]
-                                      ✓ epic-2-retrospective: [status]
-```
-
-### Final Check
-
-- [ ] Total count of epics matches
-- [ ] Total count of stories matches
-- [ ] All items are in the expected order (epic, stories, retrospective)
+1. Review the generated sprint-status.yaml file
+2. Use this file to track development progress
+3. Agents will update statuses as they work
+4. Re-run this workflow to refresh auto-detected statuses

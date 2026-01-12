@@ -44,9 +44,13 @@ function generate(): void{
 }
 
 // Emit events to parent component
-const emit = defineEmits(['reinitialize', 'prices-changed', 'asset-count-change'])
+const emit = defineEmits(['reinitialize', 'prices-changed', 'asset-count-change', 'export-history'])
 
 // Reset processed assets set after each processing cycle (to ensure clean state)
+
+function exportHistory(): void {
+  emit('export-history')
+}
 </script>
 
 <template>
@@ -101,6 +105,7 @@ const emit = defineEmits(['reinitialize', 'prices-changed', 'asset-count-change'
       <button @click="decreasePrices">-</button>
       <button @click="generate">Generate</button>
       <button @click="$emit('reinitialize')">Reinitialize</button>
+      <button @click="exportHistory">Export History</button>
     </div>
   </div>
 </template>

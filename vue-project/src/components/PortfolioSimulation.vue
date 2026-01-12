@@ -19,6 +19,7 @@ import type { Portfolio } from '../types/portfolio'
 // Import the PositionDisplay component
 import AssetCard from './AssetCard.vue'
 import PriceControls from './PriceControls.vue'
+import AssetDetailView from './AssetDetailView.vue'
 import type { Asset } from '@/types/asset'
 
 // Reactive portfolio state
@@ -31,6 +32,10 @@ const portfolio = reactive<Portfolio>({
 
 // Number of assets to generate
 const numberOfAssets = ref(5)
+
+// State for showing detail view
+const showDetailView = ref(false)
+const selectedAsset = ref<Asset | null>(null)
 
 // Generate or update portfolio assets
 function generatePortfolio(): void {
@@ -165,31 +170,65 @@ function exportHistory(): void {
     console.log("History copied to clipboard!");
   });
 }
+
+// Handle export history event from PriceControls
+function handleExportHistory(): void {
+  exportHistory();
+}
+
+// Method to show asset detail view
+function showAssetDetail(asset: Asset): void {
+  selectedAsset.value = asset;
+  showDetailView.value = true;
+}
 </script>
 
 <template>
   <div class="container">
-    <h1>Portfolio Simulation Application</h1>
+    <h1>Portfolio Simulation Dashboard</h1>
     
     <PriceControls 
       :portfolio="portfolio"
       @reinitialize="reinitialize"
       @prices-changed="onPricesChanged"
       @asset-count-change="handleAssetCountChange"
+      @export-history="handleExportHistory"
     />
     
-    <div class="portfolio-info">
-      <h2>Closed Positions: ${{ getClosedPositionsValue().toFixed(2) }}</h2>
-      <h2>Active Positions: ${{ getActivePositionsValue().toFixed(2) }}</h2>
-      <h2>Total: ${{ getTotalValue().toFixed(2) }}</h2>
-      <button @click="exportHistory">Export History</button>
+    <!-- Portfolio Summary Section -->
+    <div class="portfolio-summary">
+      <div class="summary-card">
+        <h2>Portfolio Value</h2>
+        <p class="value">${{ getTotalValue().toFixed(2) }}</p>
+      </div>
+      
+      <div class="summary-card">
+        <h2>Active Positions</h2>
+        <p class="value">${{ getActivePositionsValue().toFixed(2) }}</p>
+      </div>
+      
+      <div class="summary-card">
+        <h2>Closed Positions</h2>
+        <p class="value">${{ getClosedPositionsValue().toFixed(2) }}</p>
+      </div>
     </div>
     
+    <!-- Assets Grid -->
     <div class="assets-container">
+      <h2>Assets</h2>
       <AssetCard 
         v-for="asset in portfolio.assets" 
         :key="`asset-${Math.random().toString(36).substring(2, 11)}`" 
         :asset="asset"
+        @show-detail="showAssetDetail"
+      />
+    </div>
+    
+    <!-- Asset Detail View -->
+    <div v-if="showDetailView && selectedAsset" class="asset-detail-container">
+      <AssetDetailView 
+        :asset="selectedAsset"
+        @close="showDetailView = false"
       />
     </div>
   </div>
@@ -203,18 +242,72 @@ function exportHistory(): void {
   font-family: Arial, sans-serif;
 }
 
-.portfolio-info {
+h1 {
+  text-align: center;
+  color: #333;
   margin-bottom: 30px;
-  padding: 20px;
-  background-color: #e8f5e8;
+}
+
+.portfolio-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.summary-card {
+  background-color: #f8f9fa;
   border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  border: 1px solid #e9ecef;
+}
+
+.summary-card h2 {
+  margin-top: 0;
+  color: #495057;
+  font-size: 1.1em;
+}
+
+.value {
+  font-size: 1.5em;
+  font-weight: bold;
+  color: #212529;
+  margin: 10px 0 0 0;
+}
+
+.assets-container {
+  margin-top: 30px;
+}
+
+.assets-container h2 {
+  color: #333;
+  margin-bottom: 20px;
   text-align: center;
 }
 
 .assets-container {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 20px;
 }
 
+.asset-detail-container {
+  margin-top: 30px;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 10px;
+  }
+  
+  .portfolio-summary {
+    grid-template-columns: 1fr;
+  }
+  
+  .assets-container {
+    grid-template-columns: 1fr;
+  }
+}
 </style>

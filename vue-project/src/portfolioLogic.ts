@@ -102,26 +102,12 @@ export function addPositionWhenThresholdCrossed(asset: Asset, upwardThreshold: n
     }
   }
 
-  let tradeRecentlyOpened = false;
-  // if "current asset price" is lower than the "Downward Threshold (%)" of "initialReverseTrendTriggerValue" open a new trade and set "tradeRecentlyOpened" to true
-  if (asset.initialReverseTrendTriggerValue !== undefined && 
-      !uptrend && 
-      asset.price < asset.initialReverseTrendTriggerValue * (1 - downwardThreshold / 100)) {
-    history.recordAction('addPositionWhenThresholdCrossed', asset.name, { 
-      message: 'Opening new position based on initial trigger value and downward threshold'
-    });
-    openNewPosition(asset);
-
-    //reset it in case of more downwards
-    asset.initialReverseTrendTriggerValue = asset.price;
-    tradeRecentlyOpened = true;
-  }
-  
   // If we're in a trend reversal period, check if we should allow new positions
   if (asset.trendReversed) {
     history.recordAction('addPositionWhenThresholdCrossed', asset.name, { 
       message: 'In trend reversal period'
     });
+    
     // Calculate how much current price is below the highest opening price
     const priceBelowTopPercentage = ((asset.highestOpeningPrice - asset.price) / asset.highestOpeningPrice) * 100;
     
@@ -129,13 +115,12 @@ export function addPositionWhenThresholdCrossed(asset: Asset, upwardThreshold: n
       message: 'Price below top percentage',
       priceBelowTopPercentage
     });
-    
 
     // The main condition for resetting trend reversal:
     // 1. Current price > old top price (price has recovered above highest opening price)
-    // 2. Current price is trend reversal % lower than old top price (price dropped significantly again)
-    // 3. Current price > reverse trend trigger value (the condition specified in the task - when current price exceeds the trigger value, reset trend reversal)
-    // 4. Price has increased (current price > previous price) - this is the new requirement from the task
+    // 2. Current price is trend reversal % lower than old top price (price dropped significantly again) 
+    // 3. Current price > reverse trend trigger value (when current price exceeds the trigger value, reset trend reversal)
+    // 4. Price has increased (current price > previous price) - this is the requirement from the task
     const shouldResetCondition1 = asset.price > asset.highestOpeningPrice;
     history.recordAction('addPositionWhenThresholdCrossed', asset.name, { 
       message: 'shouldResetCondition1 check',
@@ -162,40 +147,29 @@ export function addPositionWhenThresholdCrossed(asset: Asset, upwardThreshold: n
                         shouldResetCondition3 ||
                         shouldResetCondition4;
                         
-    // If we're still within trend reversal percentage, prevent new positions 
-    // unless one of the exceptions is encountered
-    if (priceBelowTopPercentage < trendReversalPercentage) {
+    // If we're still within trend reversal percentage and shouldn't reset, prevent new positions 
+    if (priceBelowTopPercentage < trendReversalPercentage && !shouldReset) {
       history.recordAction('addPositionWhenThresholdCrossed', asset.name, { 
         message: 'Still within trend reversal percentage, preventing new positions'
       });
       
-      // However, we should still allow opening positions when downward threshold is met
-      // even during trend reversal period - this fixes the core issue
-      if (!shouldReset && !uptrend && differencePercentage > downwardThreshold) {
-        if(!tradeRecentlyOpened){
-          history.recordAction('addPositionWhenThresholdCrossed', asset.name, { 
-            message: 'Opening new position due to downward threshold during trend reversal'
-          });
-          openNewPosition(asset);
-          tradeRecentlyOpened=false;
-        }else{
-          history.recordAction('addPositionWhenThresholdCrossed', asset.name, { 
-            message: 'Position already opened by initialReverseTrendTriggerValue #1'
-          });
-        }
+      // But still allow opening positions when downward threshold is met
+      if (!uptrend && differencePercentage > downwardThreshold) {
+        history.recordAction('addPositionWhenThresholdCrossed', asset.name, { 
+          message: 'Opening new position due to downward threshold during trend reversal'
+        });
+        openNewPosition(asset);
         return;
       }
       
-      if(!shouldReset){
-        return; // Don't create new positions during trend reversal period
-      }else{
-        history.recordAction('addPositionWhenThresholdCrossed', asset.name, { 
-          message: 'Should reset trend reversal',
-          shouldReset
-        });
-      }
+      // If we're not resetting and not meeting the downward threshold, don't create positions
+      history.recordAction('addPositionWhenThresholdCrossed', asset.name, { 
+        message: 'Not meeting conditions for new position during trend reversal'
+      });
+      return;
     }
     
+    // If we should reset the trend reversal
     if (shouldReset) {
       history.recordAction('addPositionWhenThresholdCrossed', asset.name, { 
         message: 'Resetting trend reversal'
@@ -204,19 +178,15 @@ export function addPositionWhenThresholdCrossed(asset: Asset, upwardThreshold: n
       // Reset the reverse trend trigger value when trend reversal is invalidated
       asset.reverseTrendTriggerValue = undefined;
 
-      // Outside of the trendReversed while there are active positions, the highestOpeningPrice equals the max opening price of the opened positions.
-      // The positions whithout a take profit are excluded because it is possible to have one opened at the historical maximum.
-      const numberOfValidOpeningPrices: number[] = asset.positions.filter(p => p.isActive && p.stopLossPrice != -1).map(p => p.openingPrice)
-      
-      if(numberOfValidOpeningPrices.length>0){
-        asset.highestOpeningPrice = Math.max(...numberOfValidOpeningPrices);
-      }else{
+      // Recalculate highestOpeningPrice after reset - should be based on active positions
+      const activePositions = asset.positions.filter(p => p.isActive);
+      if (activePositions.length > 0) {
+        asset.highestOpeningPrice = Math.max(...activePositions.map(p => p.openingPrice));
+      } else {
         asset.highestOpeningPrice = asset.price;
       }
       
       // After trend reversal is reset, check if we should open a new position based on upward threshold
-      // This fixes the issue where after trend reversal is reset, we would create positions 
-      // on every price increase instead of only when upward threshold is reached
       history.recordAction('addPositionWhenThresholdCrossed', asset.name, { 
         message: 'After resetting trend reversal, checking for upward threshold'
       });
@@ -226,22 +196,25 @@ export function addPositionWhenThresholdCrossed(asset: Asset, upwardThreshold: n
         differencePercentage,
         upwardThreshold
       });
+      
+      // Only open position if we're in an uptrend and meet the upward threshold
       if (uptrend && differencePercentage > upwardThreshold) {
-        if(!tradeRecentlyOpened){
-          history.recordAction('addPositionWhenThresholdCrossed', asset.name, { 
-            message: 'Opening new position due to upward threshold right after trend reversal reset'
-          });
-          openNewPosition(asset);
-          tradeRecentlyOpened=false;
-        }else{
-          history.recordAction('addPositionWhenThresholdCrossed', asset.name, { 
-            message: 'Position already opened by initialReverseTrendTriggerValue #2'
-          });
-        }
-        
+        history.recordAction('addPositionWhenThresholdCrossed', asset.name, { 
+          message: 'Opening new position due to upward threshold right after trend reversal reset'
+        });
+        openNewPosition(asset);
         return;
       }
     }
+  }
+  
+  // If we're not in a trend reversal period or have already handled the reset case,
+  // check if we should open a new position based on upward threshold
+  if (!asset.trendReversed && uptrend && differencePercentage > upwardThreshold) {
+    history.recordAction('addPositionWhenThresholdCrossed', asset.name, { 
+      message: 'Opening new position due to upward threshold'
+    });
+    openNewPosition(asset);
   }
   
   history.recordAction('addPositionWhenThresholdCrossed', asset.name, { 
