@@ -45,12 +45,12 @@ development_status:
   1-2-asset-details-view: done
   epic-1-retrospective: done
 
-  epic-2: backlog
+  epic-2: in-progress
   2-1-threshold-crossing-logic: backlog
   2-2-stop-loss-management: backlog
   2-3-trend-reversal-protection: backlog
-  2-4-ohlc-file-based-simulation: backlog
-  2-5-static-data-simulation: backlog
+  2-4-ohlc-file-based-simulation: ready-for-dev
+  2-5-static-data-simulation: ready-for-dev
   epic-2-retrospective: optional
 
   epic-3: backlog
