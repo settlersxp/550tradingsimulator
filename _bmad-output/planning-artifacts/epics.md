@@ -146,6 +146,35 @@ So that I can simulate more realistic trading behavior.
 **When** a new position would be created
 **Then** the system should prevent creation unless reset conditions are met
 
+### Story 2.4: OHLC File-Based Simulation
+
+As a system,
+I want to load historical price data from an OHLC file,
+So that I can simulate realistic price movements based on actual market data.
+
+**Acceptance Criteria:**
+
+**Given** a user uploads an OHLC file with date, open, high, low, close columns
+**When** the simulation runs
+**Then** price movements should be simulated from open to close in increments of 0.5 for each day
+**And** only one asset should be visible at a time during simulation
+**And** the system should use real historical data instead of random numbers
+**And** the file upload interface should be accessible as a standalone web page
+
+### Story 2.5: Static Data Simulation
+
+As a system,
+I want to process multiple days of OHLC data for extended simulation,
+So that I can evaluate trading strategies over longer time periods.
+
+**Acceptance Criteria:**
+
+**Given** an OHLC file with multiple days of historical data
+**When** the simulation processes each day's data
+**Then** the system should simulate price movements for all days sequentially
+**And** the portfolio should maintain state between days
+**And** threshold crossing and stop loss logic should be applied to each simulated price movement
+
 ## Epic 3: Data Management and Processing
 
 As a user of the trading simulator,

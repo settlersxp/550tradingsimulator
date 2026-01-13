@@ -108,6 +108,16 @@ The project includes a simulation framework that can run multiple iterations to 
 2. `process-simulations.js`: Processes results and generates HTML visualization using Chart.js
 3. Results are saved in JSON format for analysis
 
+### OHLC File-Based Simulation
+
+The system now supports loading historical price data from OHLC (Open, High, Low, Close) files instead of generating random prices:
+- Supports CSV/TSV files with date, open, high, low, close columns
+- Simulates price movements from open to close in 0.5 increments for granular movement
+- Maintains portfolio state between days
+- Single asset display during simulation
+- Accessible as a standalone web page
+- Integrates with existing threshold crossing and stop loss logic
+
 ## Configuration and Environment
 
 The project uses standard Node.js configuration with:
