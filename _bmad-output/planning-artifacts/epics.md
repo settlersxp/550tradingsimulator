@@ -32,7 +32,6 @@ NFR5: The system should provide accurate and consistent calculation results
 
 ### Additional Requirements
 
-- Integration with financial data APIs for real-time price updates
 - Multi-position asset management where each asset maintains multiple positions instead of single position count
 - Threshold crossing logic for adding new positions based on percentage changes from highest opening price
 - Stop loss management that dynamically updates stop loss prices and closes positions when thresholds are met

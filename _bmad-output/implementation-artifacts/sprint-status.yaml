@@ -42,7 +42,7 @@ story_location: "{implementation_artifacts}"
 development_status:
   epic-1: in-progress
   1-1-dashboard-layout: done
-  1-2-asset-details-view: backlog
+  1-2-asset-details-view: done
   epic-1-retrospective: optional
 
   epic-2: backlog
