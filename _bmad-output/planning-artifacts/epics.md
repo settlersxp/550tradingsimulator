@@ -270,6 +270,3 @@ So that I can evaluate trading strategy performance.
 **When** I view the results
 **Then** I should see portfolio value trends
 **And** I should be able to export results for further analysis
-
-# task_progress
-- [x] Extracted requirements from documentation
