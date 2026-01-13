@@ -1,4 +1,4 @@
-# generated: 01-12-2026 20:40
+# generated: 01-13-2026 22:01
 # project: 550tradingsimulator
 # project_key: 550ts
 # tracking_system: file-system
@@ -33,7 +33,7 @@
 # - SM typically creates next story after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
-generated: 01-12-2026 20:40
+generated: 01-13-2026 22:01
 project: 550tradingsimulator
 project_key: 550ts
 tracking_system: file-system
@@ -46,11 +46,24 @@ development_status:
   epic-1-retrospective: done
 
   epic-2: backlog
-  2-1-data-source-integration: backlog
-  2-2-data-processing-pipeline: backlog
+  2-1-threshold-crossing-logic: backlog
+  2-2-stop-loss-management: backlog
+  2-3-trend-reversal-protection: backlog
+  2-4-ohlc-file-based-simulation: backlog
+  2-5-static-data-simulation: backlog
   epic-2-retrospective: optional
 
   epic-3: backlog
-  3-1-strategy-definition: backlog
-  3-2-simulation-execution: backlog
+  3-1-asset-generation-and-management: backlog
+  3-2-price-calculation-and-updates: backlog
   epic-3-retrospective: optional
+
+  epic-4: backlog
+  4-1-component-based-architecture: backlog
+  4-2-performance-optimization: backlog
+  epic-4-retrospective: optional
+
+  epic-5: backlog
+  5-1-action-history-system: backlog
+  5-2-simulation-results-analysis: backlog
+  epic-5-retrospective: optional
