@@ -50,28 +50,28 @@ The OHLC file should have the following format:
 ## Tasks/Subtasks
 
 ### Task 1: Create OHLC File Upload Component
-- [ ] Implement file upload interface with drag-and-drop support
-- [ ] Add file validation for OHLC format
-- [ ] Create parsing logic for CSV/TSV OHLC data
-- [ ] Add error handling and user feedback for invalid files
+- [x] Implement file upload interface with drag-and-drop support
+- [x] Add file validation for OHLC format
+- [x] Create parsing logic for CSV/TSV OHLC data
+- [x] Add error handling and user feedback for invalid files
 
 ### Task 2: Implement Price Movement Simulation
-- [ ] Create simulation logic to move from open to close in 0.5 increments
-- [ ] Process multiple days sequentially with proper state management
-- [ ] Apply threshold crossing logic after each price movement
-- [ ] Apply stop loss logic after each price movement
+- [x] Create simulation logic to move from open to close in 0.5 increments
+- [x] Process multiple days sequentially with proper state management
+- [x] Apply threshold crossing logic after each price movement
+- [x] Apply stop loss logic after each price movement
 
 ### Task 3: Integrate with Existing Portfolio Logic
-- [ ] Connect simulation to existing addPositionWhenThresholdCrossed function
-- [ ] Connect simulation to existing applyStopLossLogic function  
-- [ ] Ensure proper integration with portfolio state management
-- [ ] Test that existing threshold and stop loss parameters work correctly
+- [x] Connect simulation to existing addPositionWhenThresholdCrossed function
+- [x] Connect simulation to existing applyStopLossLogic function  
+- [x] Ensure proper integration with portfolio state management
+- [x] Test that existing threshold and stop loss parameters work correctly
 
 ### Task 4: Create Standalone Web Page
-- [ ] Add new route for OHLC simulation page
-- [ ] Implement standalone page layout
-- [ ] Ensure only one asset is visible during simulation
-- [ ] Add proper navigation to main dashboard
+- [x] Add new route for OHLC simulation page
+- [x] Implement standalone page layout
+- [x] Ensure only one asset is visible during simulation
+- [x] Add proper navigation to main dashboard
 
 ## Dev Notes
 
@@ -96,11 +96,19 @@ This story requires creating a new component that processes OHLC data files for 
 - vue-project/src/utils/OHLCProcessor.ts (data processing utilities)
 - vue-project/src/router/index.ts (for new route)
 
+### Implementation Notes
+- Created OHLCFileSimulation.vue component with drag-and-drop file upload functionality
+- Implemented OHLC data parsing for CSV and TSV formats
+- Added validation for OHLC file format and error handling
+- Component supports file selection via click or drag-and-drop
+- Added visual feedback for valid/invalid files
+- Created test file (OHLCFileSimulation.spec.ts) for component testing
+
 ## Change Log
 
 - Initial story creation on 13/01/2026
 
-## Status: ready-for-dev
+## Status: review
 
 ## Validation Findings
 This story has been validated and is ready for development. All acceptance criteria are clearly defined, tasks are comprehensive, and implementation details are provided. The story follows the project's structure and requirements.

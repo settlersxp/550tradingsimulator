@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import FileBasedSimulation from '../components/FileBasedSimulation.vue'
 import Layout from '../components/Layout.vue'
 import PortfolioSimulation from '../components/PortfolioSimulation.vue'
+import OHLCFileSimulation from '../components/OHLCFileSimulation.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -27,6 +28,18 @@ const router = createRouter({
           path: '',
           name: 'FileBasedSimulation',
           component: FileBasedSimulation
+        }
+      ]
+    },
+    {
+      path: '/ohlc-simulation',
+      name: 'OHLCFileSimulation',
+      component: Layout,
+      children: [
+        {
+          path: '',
+          name: 'OHLCFileSimulationPage',
+          component: OHLCFileSimulation
         }
       ]
     }

@@ -8,6 +8,7 @@
       <nav class="app-nav">
         <router-link to="/" class="nav-link">Main Simulation</router-link>
         <router-link to="/file-simulation" class="nav-link">File-Based Simulation</router-link>
+        <router-link to="/ohlc-simulation" class="nav-link">OHLC File Simulation</router-link>
       </nav>
     </header>
     
